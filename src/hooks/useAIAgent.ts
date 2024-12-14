@@ -1,7 +1,7 @@
 // src/hooks/useAIAgent.ts
 import { useState, useEffect } from 'react';
-//import { walletAI, AIResponse } from '@/lib/ai/agent';
-import { walletAI, AIResponse } from '@/lib/ai/agent';
+import { WalletAI, AIResponse } from '@/lib/ai/agent';
+
 interface AIAgentHook {
   isThinking: boolean;
   lastResponse: AIResponse | null;
@@ -18,7 +18,7 @@ export function useAIAgent(config: { balance: string; address: string; isLoading
 
   // Update AI context when config changes
   useEffect(() => {
-    walletAI.updateContext(config);
+    WalletAI.updateContext(config);
   }, [config]);
 
   const askAI = async (query: string): Promise<AIResponse> => {
@@ -26,7 +26,7 @@ export function useAIAgent(config: { balance: string; address: string; isLoading
     setError(null);
     
     try {
-      const response = await walletAI.analyze(query);
+      const response = await WalletAI.ask(query);
       setLastResponse(response);
       return response;
     } catch (err) {
@@ -47,7 +47,7 @@ export function useAIAgent(config: { balance: string; address: string; isLoading
     setError(null);
 
     try {
-      const response = await walletAI.evaluateTransaction(toAddress, amount, purpose);
+      const response = await WalletAI.evaluateTransaction(toAddress, amount, purpose);
       setLastResponse(response);
       return response;
     } catch (err) {
@@ -65,7 +65,7 @@ export function useAIAgent(config: { balance: string; address: string; isLoading
 
     try {
       // Analyze transaction logic
-      const response = await walletAI.analyzeTransaction(amount, to, memo);
+      const response = await WalletAI.analyzeTransaction(amount, to, memo);
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to analyze transaction';

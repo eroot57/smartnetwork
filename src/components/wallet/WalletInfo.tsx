@@ -1,17 +1,16 @@
-// src/components/wallet/WalletInfo.tsx
 import { useContext } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { useWalletBalance } from '@/hooks/useWalletBalance';
-import { useCompressedTokenBalance } from '@/hooks/useCompressedTokenBalance';
-import { WalletContext } from '@/context/walletContext';
+import { useWalletBalance } from '@/hooks/useWalletBalance'; // Adjust the import path as necessary
+import WalletContext from '@/context/walletContext'; // Adjust the import path as necessary
 import { Loader } from '../ui/loader';
 import { formatUtils } from '@/lib/utils/format';
-import { Wallet, RefreshCw } from 'lucide-react';
+import { Wallet } from 'lucide-react';
+import { useSolBalance } from '@/hooks/useSolBalance';
 
 export function WalletInfo() {
   const { publicKey } = useContext(WalletContext);
   const { balance: solBalance, isLoading: isLoadingSol } = useWalletBalance();
-  const { compressedTokens, isLoading: isLoadingTokens } = useCompressedTokenBalance();
+  const { tokens, isLoading: isLoadingTokens } = useSolBalance();
 
   const isLoading = isLoadingSol || isLoadingTokens;
 
@@ -28,8 +27,6 @@ export function WalletInfo() {
       </Card>
     );
   }
-
-  const totalCompressedTokens = compressedTokens?.length || 0;
 
   return (
     <Card>
@@ -52,18 +49,23 @@ export function WalletInfo() {
             </div>
           </div>
 
-          {/* Compressed Tokens Summary */}
-          <div className="p-4 border rounded-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Compressed Tokens</p>
-                <p className="text-2xl font-bold">{totalCompressedTokens}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+          {/* Token Balances */}
+          {tokens && tokens.length > 0 && (
+            <div className="p-4 border rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Token Balances</p>
+                  <ul>
+                    {tokens.map((token) => (
+                      <li key={token.mint}>
+                        {token.symbol}: {formatUtils.formatNumber(parseFloat(token.amount), token.decimals)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Wallet Address */}
           <div className="pt-4">

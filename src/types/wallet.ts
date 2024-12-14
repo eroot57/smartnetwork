@@ -11,14 +11,13 @@ export interface WalletResponse {
   }
   
   export interface TransactionResponse {
-    signature: string | undefined;
     id: string;
-    status: string;
-    from: string;
-    to: string;
     amount: string;
-    currency: string;
+    fromAddress: string;
+    toAddress: string;
     timestamp: string;
+    status: 'pending' | 'confirmed' | 'failed';
+    signature?: string;
   }
   
   export interface WalletState {
@@ -26,4 +25,22 @@ export interface WalletResponse {
     balance: string;
     isLoading: boolean;
     error: string | null;
+  }
+
+  export interface TokenBalance {
+    mint: string;
+    amount: string;
+    decimals: number;
+    symbol: string;
+    name: string;
+    logoURI?: string;
+    priceData?: {
+      price: number;
+      change24h: number;
+    };
+  }
+  
+  export interface WalletBalance {
+    amount: string;
+    usdValue?: number;
   }

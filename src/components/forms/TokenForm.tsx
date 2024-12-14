@@ -2,61 +2,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useZKCompression } from "@/context/zkCompressionContext";
 import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
+import { WalletAI } from "@/lib/ai/agent";
 
 type Props = {
-  mint: string
+  mint: string;
   onSubmit: () => void;
 };
 
-const DecompressTokensForm = ({
-  mint,
-  onSubmit,
-}: Props) => {
-  const { descompressToken } = useZKCompression();
+const TokensForm = ({ mint, onSubmit }: Props) => {
   const [amount, setAmount] = useState<string | number>("");
-  const [isDecompressing, setIsDecompressing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   const canSend = amount && Number(amount) > 0;
 
-  const handleDecompress = async () => {
+  const handle = async () => {
     if (!canSend) return;
     try {
-      setIsDecompressing(true);
-      await descompressToken({
-        mint: new PublicKey(mint),
-        amount: Number(amount),
-      });
-      toast({
-        title: "Tokens decompressed",
-        description: "Tokens decompressed successfully",
-      });
-      onSubmit();
-    } catch (error: any) {
-      const isInsufficientBalance = error?.message
-        ?.toLowerCase()
-        .includes("not enough balance");
-      if (isInsufficientBalance) {
-        console.log("Insufficient balance");
+      setIsProcessing(true);
+      const response = await WalletAI.evaluateTransaction(mint, Number(amount));
+      if (response.type === "success") {
         toast({
-          title: "Insufficient balance",
-          description: "You do not have enough balance to decompress tokens",
-          variant: "destructive",
+          title: "Transaction Successful",
+          description: response.message,
         });
+        onSubmit();
       } else {
         toast({
-          title: "Error",
-          description: "An error occurred while decompressing tokens",
-          variant: "destructive",
+          title: "Transaction Warning",
+          description: response.message,
+          variant: "default",
         });
       }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An error occurred while processing the transaction",
+        variant: "destructive",
+      });
       console.log("error: ", error);
     } finally {
-      setIsDecompressing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -67,7 +56,7 @@ const DecompressTokensForm = ({
           <Label>Amount</Label>
           <div className="flex items-center gap-2">
             <Input
-              disabled={isDecompressing}
+              disabled={isProcessing}
               type="number"
               placeholder="100"
               value={amount}
@@ -83,15 +72,14 @@ const DecompressTokensForm = ({
               type="button"
               variant="secondary"
               size="sm"
-              // onClick={() => setAmount(compressedBalance)}
-              disabled={isDecompressing}
+              disabled={isProcessing}
             >
               Max
             </Button>
           </div>
         </div>
       </div>
-      {isDecompressing ? (
+      {isProcessing ? (
         <div className="flex justify-center h-9 items-center">
           <Loader className="w-5" />
         </div>
@@ -99,13 +87,13 @@ const DecompressTokensForm = ({
         <Button
           className="w-full"
           disabled={!canSend}
-          onClick={handleDecompress}
+          onClick={handle}
         >
-          Decompress
+          Send
         </Button>
       )}
     </div>
   );
 };
 
-export default DecompressTokensForm;
+export default TokensForm;

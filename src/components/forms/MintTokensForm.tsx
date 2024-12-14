@@ -6,7 +6,7 @@ import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useZKCompression } from "@/context/zkCompressionContext";
+import { WalletAI } from "@/lib/ai/agent";
 
 type Props = {
   mint: string;
@@ -15,7 +15,6 @@ type Props = {
 
 const MintTokensForm = ({ mint, onSubmit }: Props) => {
   const { publicKey: connectedWallet } = useWallet();
-  const { mintTokens } = useZKCompression();
   const [amount, setAmount] = useState<string | number>("");
   const [recipient, setRecipient] = useState(connectedWallet?.toBase58() || "");
   const [isSending, setIsSending] = useState(false);
@@ -27,16 +26,20 @@ const MintTokensForm = ({ mint, onSubmit }: Props) => {
     if (!canSend) return;
     try {
       setIsSending(true);
-      await mintTokens({
-        mint: new PublicKey(mint),
-        to: new PublicKey(recipient),
-        amount: Number(amount),
-      });
-      toast({
-        title: "Tokens minted",
-        description: "Tokens minted successfully",
-      });
-      onSubmit();
+      const response = await WalletAI.evaluateTransaction(recipient, Number(amount), mint);
+      if (response.type === "success") {
+        toast({
+          title: "Tokens minted",
+          description: response.message,
+        });
+        onSubmit();
+      } else {
+        toast({
+          title: "Transaction Warning",
+          description: response.message,
+          variant: "default",
+        });
+      }
     } catch (error: any) {
       const isInsufficientBalance = error?.message
         ?.toLowerCase()
@@ -45,13 +48,13 @@ const MintTokensForm = ({ mint, onSubmit }: Props) => {
         console.log("Insufficient balance");
         toast({
           title: "Insufficient balance",
-          description: "You do not have enough balance to send tokens",
+          description: "You do not have enough balance to mint tokens",
           variant: "destructive",
         });
       } else {
         toast({
           title: "Error",
-          description: "An error occurred while sending tokens",
+          description: "An error occurred while minting tokens",
           variant: "destructive",
         });
       }

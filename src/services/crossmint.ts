@@ -3,13 +3,19 @@ import { WalletResponse, BalanceResponse, TransactionResponse } from '@/types/wa
 
 const CROSSMINT_API_URL = 'https://staging.crossmint.com/api/v1-alpha2';
 
+interface Transaction {
+  id: string;
+  type: 'incoming' | 'outgoing';
+  amount: string;
+  from: string;
+  to: string;
+  timestamp: Date;
+  status: 'pending' | 'confirmed' | 'failed';
+  signature?: string;
+  error?: string;
+}
+
 class CrossmintService {
-  getTransactions(walletAddress: string) {
-      throw new Error('Method not implemented.');
-  }
-  getTransactionStatus(txId: string) {
-      throw new Error('Method not implemented.');
-  }
   private apiKey: string;
 
   constructor() {
@@ -20,6 +26,25 @@ class CrossmintService {
     this.apiKey = apiKey;
   }
 
+  async getTransactions(walletAddress: string): Promise<Transaction[]> {
+    const response = await this.fetchApi<TransactionResponse[]>(`/wallets/${walletAddress}/transactions`);
+    return response.map(tx => ({
+      id: tx.id,
+      type: tx.fromAddress === walletAddress ? 'outgoing' : 'incoming',
+      amount: tx.amount,
+      from: tx.fromAddress,
+      to: tx.toAddress,
+      timestamp: new Date(tx.timestamp),
+      status: tx.status,
+      signature: tx.signature,
+    }));
+  }
+
+  async getTransactionStatus(txId: string): Promise<string> {
+    const response = await this.fetchApi<{ status: string }>(`/transactions/${txId}/status`);
+    return response.status;
+  }
+
   private async fetchApi<T>(
     endpoint: string, 
     options: RequestInit = {}
@@ -27,14 +52,14 @@ class CrossmintService {
     const response = await fetch(`${CROSSMINT_API_URL}${endpoint}`, {
       ...options,
       headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
-        'X-API-KEY': this.apiKey,
         ...options.headers,
       },
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
+      throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
     }
 
     return response.json();

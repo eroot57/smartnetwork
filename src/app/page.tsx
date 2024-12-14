@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { WalletInfo } from '@/components/wallet/WalletInfo';
 import { AIAssistant } from '@/components/wallet/AIAssistant';
-import { SendTransaction } from '@/components/wallet/SendTransaction';
+import SendTransaction from '@/components/wallet/SendTransaction';
 import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 import { TokenManager } from '@/components/wallet/TokenManager';
 //import { NFTGallery } from '@/components/wallet/NFTGallery';
@@ -52,7 +52,7 @@ export default function Home() {
         {/* Left Column */}
         <div className="space-y-6">
           <WalletInfo />
-          <SendTransaction />
+          <SendTransaction balance={''} address={''} isLoading={false} error={null} />
           <Settings />
         </div>
 

@@ -1,8 +1,29 @@
-// src/lib/ai/agent.ts
 import { WalletState } from '@/types/wallet';
 import { env } from '@/config/env';
 import { ErrorHandler } from '@/lib/utils/error-handling';
 
+// Add the missing AIResponse interface
+export interface AIResponse {
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  analysis?: {
+    risk: number;
+    recommendation: string;
+    details: string[];
+  };
+  actions?: {
+    primary?: {
+      label: string;
+      action: string;
+    };
+    secondary?: {
+      label: string;
+      action: string;
+    };
+  };
+}
+
+// Add the existing interfaces
 export interface AgentTrait {
   name: string;
   value: number;
@@ -25,7 +46,7 @@ export interface AgentContext {
 }
 
 export interface AgentMessage {
-  type: 'question' | 'analysis' | 'warning' | 'suggestion';
+  type: 'question' | 'analysis' | 'warning' | 'suggestion' | 'evaluation';
   content: string;
   context?: any;
 }
@@ -44,6 +65,154 @@ export interface AgentResponse {
     recommendation: string;
   };
 }
+
+// Add the WalletAI class that was missing from imports
+export class WalletAI {
+  private agent: Agent;
+  static context: { balance: string; address: string; isLoading: boolean; error: string | null };
+
+  constructor(config: AgentConfig) {
+    this.agent = new Agent(config);
+  }
+
+  static updateContext(config: { balance: string; address: string; isLoading: boolean; error: string | null }) {
+    // Implementation of the updateContext method
+    // This method updates the context with the provided configuration
+    this.context = {
+      balance: config.balance,
+      address: config.address,
+      isLoading: config.isLoading,
+      error: config.error
+    };
+  }
+
+  static async ask(query: string): Promise<AIResponse> {
+    // Implementation of ask method
+    const message: AgentMessage = {
+      type: 'question',
+      content: query,
+      context: this.context
+    };
+
+    const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
+    const response = await instance.agent.process(message);
+    return {
+      message: response.content,
+      type: instance.getResponseType(response.suggestion?.type),
+      analysis: response.analysis && {
+        risk: response.analysis.risk,
+        recommendation: response.analysis.recommendation,
+        details: response.analysis.factors
+      },
+      actions: instance.getActions(response)
+    };
+  }
+
+  static async evaluateTransaction(toAddress: string, amount: number, purpose?: string): Promise<AIResponse> {
+    // Implementation of evaluateTransaction method
+    const message: AgentMessage = {
+      type: 'evaluation',
+      content: 'Evaluate transaction',
+      context: { toAddress, amount, purpose, ...this.context }
+    };
+
+    const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
+    const response = await instance.agent.process(message);
+    return {
+      message: response.content,
+      type: instance.getResponseType(response.suggestion?.type),
+      analysis: response.analysis && {
+        risk: response.analysis.risk,
+        recommendation: response.analysis.recommendation,
+        details: response.analysis.factors
+      },
+      actions: instance.getActions(response)
+    };
+  }
+
+  static async analyzeTransaction(amount: number, to: string, memo?: string): Promise<{ suggestion: { type: string }, content: string }> {
+    // Implementation of analyzeTransaction method
+    const message: AgentMessage = {
+      type: 'analysis',
+      content: 'Analyze transaction',
+      context: { amount, to, memo, ...this.context }
+    };
+
+    const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
+    const response = await instance.agent.process(message);
+    return { suggestion: { type: response.suggestion?.type || 'default' }, content: response.content };
+  }
+
+  async analyzeTransaction(amount: number, recipient: string, purpose?: string): Promise<AIResponse> {
+    const message: AgentMessage = {
+      type: 'analysis',
+      content: 'Analyze transaction',
+      context: { amount, recipient, purpose }
+    };
+
+    const response = await this.agent.process(message);
+
+    return {
+      message: response.content,
+      type: this.getResponseType(response.suggestion?.type),
+      analysis: {
+        risk: response.analysis?.risk || 0,
+        recommendation: response.analysis?.recommendation || '',
+        details: response.analysis?.factors || []
+      },
+      actions: this.getActions(response)
+    };
+  }
+
+  async getAdvice(query: string, context?: any): Promise<AIResponse> {
+    const message: AgentMessage = {
+      type: 'question',
+      content: query,
+      context
+    };
+
+    const response = await this.agent.process(message);
+
+    return {
+      message: response.content,
+      type: 'info',
+      analysis: response.analysis && {
+        risk: response.analysis.risk,
+        recommendation: response.analysis.recommendation,
+        details: response.analysis.factors
+      }
+    };
+  }
+
+  updateContext(context: Partial<AgentContext>): void {
+    this.agent.updateContext(context);
+  }
+
+  private getResponseType(suggestionType?: string): AIResponse['type'] {
+    switch (suggestionType) {
+      case 'reject': return 'error';
+      case 'warning': return 'warning';
+      case 'approve': return 'success';
+      default: return 'info';
+    }
+  }
+
+  private getActions(response: AgentResponse): AIResponse['actions'] {
+    if (!response.suggestion?.action) return undefined;
+
+    return {
+      primary: {
+        label: response.suggestion.type === 'approve' ? 'Proceed' : 'Review',
+        action: response.suggestion.action
+      },
+      secondary: response.suggestion.type !== 'approve' ? {
+        label: 'Proceed Anyway',
+        action: 'proceed'
+      } : undefined
+    };
+  }
+}
+
 
 export class Agent {
   private config: AgentConfig;

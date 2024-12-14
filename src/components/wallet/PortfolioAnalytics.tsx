@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts/umd/Recharts';
+//import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+//import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts/umd/Recharts';
 import { TrendingUp, DollarSign, Percent, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { ResponsiveContainer, XAxis, YAxis, Tooltip, Area, Line, AreaChart, LineChart } from 'recharts';
 
 interface PortfolioData {
   timestamp: number;
@@ -85,7 +87,7 @@ export function PortfolioAnalytics() {
     setMetrics(newMetrics);
   };
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: string | number) => {
     return new Date(timestamp).toLocaleDateString();
   };
 

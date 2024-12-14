@@ -1,233 +1,96 @@
-// src/components/wallet/SendTransaction.tsx
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Send, Loader2, ArrowRight } from 'lucide-react';
-import { useAIAgent } from '@/hooks/useAIAgent';
-import { useCrossmintWallet } from '@/hooks/useCrossmintWallet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { WalletAI } from '@/lib/ai/agent';
+import { WalletBalance } from '@/types/wallet';
+import { Loader } from '../ui/loader';
 
-interface TransactionFormData {
-  recipient: string;
-  amount: string;
-  purpose: string;
+interface SendTransactionProps {
+  balance: string; // Ensure balance is typed as string
+  address: string;
+  isLoading: boolean;
+  error: string | null;
 }
 
-interface TransactionStatus {
-  status: 'idle' | 'validating' | 'sending' | 'success' | 'error';
-  message: string;
-}
+const SendTransaction: React.FC<SendTransactionProps> = ({ balance, address, isLoading, error }) => {
+  const [amount, setAmount] = useState<string>('');
+  const [recipient, setRecipient] = useState<string>('');
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const { toast } = useToast();
 
-export function SendTransaction() {
-  const [formData, setFormData] = useState<TransactionFormData>({
-    recipient: '',
-    amount: '',
-    purpose: ''
-  });
+  const canSend = amount && Number(amount) > 0 && recipient.length > 0;
 
-  const [status, setStatus] = useState<TransactionStatus>({
-    status: 'idle',
-    message: ''
-  });
-
-  const { sendTransaction, balance } = useCrossmintWallet();
-  const { evaluateTransaction, isThinking } = useAIAgent({
-    balance,
-    address: '', // This will be filled from wallet context
-    isLoading: false,
-    error: null
-  });
-
-  const validateSolanaAddress = (address: string): boolean => {
-    // Basic Solana address validation (should be 32-44 characters)
-    return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Reset status when user is typing
-    if (status.status !== 'idle') {
-      setStatus({ status: 'idle', message: '' });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Basic validation
-    if (!validateSolanaAddress(formData.recipient)) {
-      setStatus({
-        status: 'error',
-        message: 'Invalid Solana address format'
-      });
-      return;
-    }
-
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      setStatus({
-        status: 'error',
-        message: 'Invalid amount'
-      });
-      return;
-    }
-
-    // Check if user has sufficient balance
-    if (amount > parseFloat(balance)) {
-      setStatus({
-        status: 'error',
-        message: 'Insufficient balance'
-      });
-      return;
-    }
-
+  const handleSend = async () => {
+    if (!canSend) return;
     try {
-      // First, get AI evaluation
-      setStatus({
-        status: 'validating',
-        message: 'Evaluating transaction safety...'
-      });
-
-      const aiEvaluation = await evaluateTransaction(
-        formData.recipient,
-        amount,
-        formData.purpose
-      );
-
-      if (aiEvaluation.action === 'REJECT_TRANSACTION') {
-        setStatus({
-          status: 'error',
-          message: `AI Safety Check: ${aiEvaluation.content}`
+      setIsSending(true);
+      const response = await WalletAI.evaluateTransaction(recipient, Number(amount), address);
+      if (response.type === 'success') {
+        toast({
+          title: 'Transaction Successful',
+          description: response.message,
         });
-        return;
+      } else {
+        toast({
+          title: 'Transaction Warning',
+          description: response.message,
+          variant: 'default',
+        });
       }
-
-      // Proceed with transaction
-      setStatus({
-        status: 'sending',
-        message: 'Sending transaction...'
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: 'An error occurred while sending the transaction',
+        variant: 'destructive',
       });
-
-      await sendTransaction(formData.recipient, amount);
-
-      setStatus({
-        status: 'success',
-        message: 'Transaction sent successfully!'
-      });
-
-      // Reset form
-      setFormData({
-        recipient: '',
-        amount: '',
-        purpose: ''
-      });
-
-      // Reset status after 5 seconds
-      setTimeout(() => {
-        setStatus({
-          status: 'idle',
-          message: ''
-        });
-      }, 5000);
-
-    } catch (error) {
-      setStatus({
-        status: 'error',
-        message: error instanceof Error ? error.message : 'Transaction failed'
-      });
+      console.log('error: ', error);
+    } finally {
+      setIsSending(false);
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Send className="w-5 h-5" />
-          Send SOL
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Recipient Address
-            </label>
-            <input
-              type="text"
-              name="recipient"
-              value={formData.recipient}
-              onChange={handleInputChange}
-              placeholder="Solana address"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={status.status === 'sending' || status.status === 'validating'}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount (SOL)
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleInputChange}
-              placeholder="0.0"
-              step="0.000000001"
-              min="0"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={status.status === 'sending' || status.status === 'validating'}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Purpose (optional)
-            </label>
-            <input
-              type="text"
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleInputChange}
-              placeholder="What's this transaction for?"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={status.status === 'sending' || status.status === 'validating'}
-            />
-          </div>
-
-          {status.message && (
-            <Alert variant={status.status === 'success' ? 'default' : 'destructive'}>
-              <AlertDescription>{status.message}</AlertDescription>
-            </Alert>
-          )}
-
-          <button
-            type="submit"
-            disabled={
-              status.status === 'sending' || 
-              status.status === 'validating' ||
-              isThinking
-            }
-            className="w-full flex items-center justify-center gap-2 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {status.status === 'sending' && (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            )}
-            {status.status === 'validating' ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Validating
-              </>
-            ) : (
-              <>
-                Send
-                <ArrowRight className="w-5 h-5" />
-              </>
-            )}
-          </button>
-        </form>
-      </CardContent>
-    </Card>
+    <div>
+      <div className="pb-5 flex flex-col gap-2">
+        <div>
+          <label>Amount</label>
+          <Input
+            disabled={isSending}
+            type="number"
+            placeholder="100"
+            value={amount}
+            onChange={(e) => {
+              if (Number(e.target.value) > 0) {
+                setAmount(e.target.value);
+              } else {
+                setAmount('');
+              }
+            }}
+          />
+        </div>
+        <div>
+          <label>Recipient</label>
+          <Input
+            disabled={isSending}
+            type="text"
+            placeholder="0xqwerty..."
+            value={recipient}
+            onChange={(e) => setRecipient(e.target.value)}
+          />
+        </div>
+      </div>
+      {isSending ? (
+        <div className="flex justify-center h-9 items-center">
+          <Loader className="w-5" />
+        </div>
+      ) : (
+        <Button className="w-full" disabled={!canSend} onClick={handleSend}>
+          Send
+        </Button>
+      )}
+    </div>
   );
-}
+};
+
+export default SendTransaction;

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
-import { useZKCompression } from "@/context/zkCompressionContext";
+import { WalletAI } from "@/lib/ai/agent";
 
 type Props = {
   mint: string;
@@ -13,7 +13,6 @@ type Props = {
 };
 
 const SendTokensForm = ({ mint, onSubmit }: Props) => {
-  const { transferTokens } = useZKCompression();
   const [amount, setAmount] = useState<string | number>("");
   const [recipient, setRecipient] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -25,16 +24,20 @@ const SendTokensForm = ({ mint, onSubmit }: Props) => {
     if (!canSend) return;
     try {
       setIsSending(true);
-      await transferTokens({
-        mint: new PublicKey(mint),
-        to: new PublicKey(recipient),
-        amount: Number(amount),
-      });
-      toast({
-        title: "Tokens sent",
-        description: "Tokens sent successfully",
-      });
-      onSubmit();
+      const response = await WalletAI.evaluateTransaction(recipient, Number(amount), mint);
+      if (response.type === "success") {
+        toast({
+          title: "Tokens sent",
+          description: response.message,
+        });
+        onSubmit();
+      } else {
+        toast({
+          title: "Transaction Warning",
+          description: response.message,
+          variant: "default",
+        });
+      }
     } catch (error: any) {
       const isInsufficientBalance = error?.message
         ?.toLowerCase()

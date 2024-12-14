@@ -164,16 +164,16 @@ export function useTransactions(walletAddress: string): UseTransactionsResult {
 
   const getTransactionStatus = useCallback(async (txId: string): Promise<string> => {
     try {
-      const status = await crossmintService.getTransactionStatus(txId);
+      const status = await crossmintService.getTransactionStatus(txId) as unknown as 'pending' | 'confirmed' | 'failed';
       
       // Update transaction status in state
       setTransactions(prev =>
         prev.map(tx =>
-          tx.id === txId ? { ...tx, status: status as unknown as 'confirmed' | 'pending' | 'failed' } : tx
+          tx.id === txId ? { ...tx, status: status as 'confirmed' | 'pending' | 'failed' } : tx
         )
       );
 
-      return status as unknown as string;
+      return status;
     } catch (err) {
       console.error('Error fetching transaction status:', err);
       return 'failed';

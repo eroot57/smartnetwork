@@ -4,7 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import DecompressTokensForm from "../forms/DescompressTokenForm";
+import DecompressTokensForm from "../forms/TokenForm";
 
 type Props = {
   mint?: string | null;

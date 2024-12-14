@@ -1,11 +1,6 @@
 import { NavLink } from "react-router-dom";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
 import {
-  getEnvironment,
-  setEnvironment,
-  Environment,
-} from "@/utils/environment";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -29,19 +24,23 @@ const Link = ({ to, label }: { to: string; label: string }) => {
   );
 };
 
-interface ImportMeta {
-  env: {
-    MODE: string;
-  };
+enum Environment {
+  LOCAL = "local",
+  DEVNET = "devnet",
+  MAINNET = "mainnet",
 }
 
+const setEnvironment = (env: Environment) => {
+  console.log(`Environment set to ${env}`);
+};
+
 const NetworkSelect = () => {
-  const environment = getEnvironment();
-  const isDevelopment = import.meta.env.MODE === "development";
+  const environment = "mainnet"; // Replace with actual environment fetching logic
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="w-full  bg-gray-50 hover:bg-gray-100 py-2 rounded font-light">
+      <DropdownMenuTrigger className="w-full bg-gray-50 hover:bg-gray-100 py-2 rounded font-light">
         {environment.charAt(0).toUpperCase() + environment.slice(1)}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
@@ -68,16 +67,16 @@ const Sidebar = () => {
     <div className="w-46 flex-shrink-0 shadow-md bg-white min-w-[175px] flex flex-col gap-6 pb-5 py-5 relative">
       <div className="flex flex-col gap-0 justify-center items-center relative">
         <h1 className="text-2xl tracking-[1px] uppercase font-bold text-gray-700">
-          ZKMent
+          AI Solana Wallet
         </h1>
         <p className="text-[9px] uppercase font-thin tracking-[2px] relative top-[-4px]">
-          Compression First
+          AI Powered
         </p>
       </div>
       <ConnectWalletButton />
       <nav className="flex flex-col gap-1 px-2">
         <Link to="/" label="Tokens" />
-        <Link to="/reclaim" label="Compress" />
+        <Link to="/reclaim" label="Reclaim Rent" />
         <Link to="/create-mint" label="Create Mint" />
         <Link to="/tx" label="Transactions" />
       </nav>

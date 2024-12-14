@@ -40,18 +40,18 @@ export function Footer() {
             <h4 className="font-semibold mb-3">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-                  Dashboard
+                <Link href="/dashboard">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Dashboard</a>
                 </Link>
               </li>
               <li>
-                <Link href="/send" className="text-sm text-muted-foreground hover:text-foreground">
-                  Send
+                <Link href="/send">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Send</a>
                 </Link>
               </li>
               <li>
-                <Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground">
-                  Settings
+                <Link href="/settings">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Settings</a>
                 </Link>
               </li>
             </ul>
@@ -62,18 +62,18 @@ export function Footer() {
             <h4 className="font-semibold mb-3">Resources</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground">
-                  Documentation
+                <Link href="/docs">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Documentation</a>
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="text-sm text-muted-foreground hover:text-foreground">
-                  Help Center
+                <Link href="/help">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Help Center</a>
                 </Link>
               </li>
               <li>
-                <Link href="/security" className="text-sm text-muted-foreground hover:text-foreground">
-                  Security
+                <Link href="/security">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Security</a>
                 </Link>
               </li>
             </ul>
@@ -84,13 +84,13 @@ export function Footer() {
             <h4 className="font-semibold mb-3">Legal</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
-                  Privacy Policy
+                <Link href="/privacy">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</a>
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
-                  Terms of Service
+                <Link href="/terms">
+                  <a className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</a>
                 </Link>
               </li>
             </ul>

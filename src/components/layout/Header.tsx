@@ -35,24 +35,24 @@ export function Header() {
       <div className="container px-4 mx-auto">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <div onClick={() => router.push('/')} className="flex items-center space-x-2 cursor-pointer">
             <Wallet className="h-6 w-6" />
             <span className="font-bold">AI Solana Wallet</span>
-          </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navItems.map(({ label, href, icon: Icon }) => (
-              <Link
+              <div
                 key={href}
-                href={href}
-                className={`flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary ${
+                onClick={() => router.push(href)}
+                className={`flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
                   router.pathname === href ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4" />
                 <span>{label}</span>
-              </Link>
+              </div>
             ))}
           </nav>
 
@@ -96,17 +96,19 @@ export function Header() {
           <div className="container px-4 py-4">
             <nav className="flex flex-col space-y-4">
               {navItems.map(({ label, href, icon: Icon }) => (
-                <Link
+                <div
                   key={href}
-                  href={href}
-                  className={`flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary ${
+                  onClick={() => {
+                    router.push(href);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`flex items-center space-x-2 text-sm font-medium transition-colors hover:text-primary cursor-pointer ${
                     router.pathname === href ? 'text-primary' : 'text-muted-foreground'
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{label}</span>
-                </Link>
+                </div>
               ))}
             </nav>
           </div>

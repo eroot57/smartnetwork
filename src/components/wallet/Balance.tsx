@@ -9,8 +9,7 @@ import {
   DollarSign 
 } from 'lucide-react';
 import { formatUtils } from '@/lib/utils/format';
-import { TokenBalance } from '@/types/wallet';
-import { WalletBalance } from '@/types/wallet'; // Adjust the import path as necessary
+import { TokenBalance, WalletBalance } from '@/types/wallet'; // Adjust the import path as necessary
 
 interface BalanceProps {
   solBalance: WalletBalance;

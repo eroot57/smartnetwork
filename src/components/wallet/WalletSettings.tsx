@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Settings as SettingsIcon, Shield, Bot, Bell, Eye, Download, Language, Moon } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Bot, Bell, Eye, Download, Languages, Moon } from 'lucide-react';
 
 interface SettingSection {
   id: string;

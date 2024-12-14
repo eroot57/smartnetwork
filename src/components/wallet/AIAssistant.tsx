@@ -1,10 +1,10 @@
-// src/components/wallet/AIAssistant.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Bot, Send, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { useAIAgent } from '@/hooks/useAIAgent';
 import { WalletState } from '@/types/wallet';
+import { AIResponse } from '@/lib/ai/agent';
 
 interface Message {
   id: string;
@@ -31,12 +31,10 @@ export function AIAssistant({ walletState, onTransactionAdvice }: AIAssistantPro
     error
   } = useAIAgent(walletState);
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Initial greeting
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
@@ -49,6 +47,12 @@ export function AIAssistant({ walletState, onTransactionAdvice }: AIAssistantPro
       ]);
     }
   }, []);
+
+  const handleAIResponse = (response: AIResponse) => {
+    if (response.actions?.primary) {
+      onTransactionAdvice?.(response.actions.primary.action === 'proceed');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,22 +72,22 @@ export function AIAssistant({ walletState, onTransactionAdvice }: AIAssistantPro
       const response = await askAI(inputValue);
       
       let status: Message['status'] = undefined;
-      if (response.action === 'APPROVE_TRANSACTION') status = 'success';
-      if (response.action === 'REJECT_TRANSACTION') status = 'error';
-      if (response.suggestion?.type === 'TRANSACTION_RISK') status = 'warning';
+      if (response.actions?.primary?.action === 'proceed') status = 'success';
+      if (response.actions?.primary?.action === 'reject') status = 'error';
+      if (response.type === 'warning') status = 'warning';
 
       const aiMessage: Message = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: response.content,
+        content: response.message,
         timestamp: new Date(),
         status
       };
 
       setMessages(prev => [...prev, aiMessage]);
 
-      if (response.action && onTransactionAdvice) {
-        onTransactionAdvice(response.action === 'APPROVE_TRANSACTION');
+      if (response.actions?.primary && onTransactionAdvice) {
+        onTransactionAdvice(response.actions.primary.action === 'proceed');
       }
     } catch (err) {
       const errorMessage: Message = {

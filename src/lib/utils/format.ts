@@ -1,4 +1,3 @@
-
 export const formatUtils = {
   // Format SOL amount with appropriate decimals
   formatSOL: (amount: number | string, decimals: number = 4): string => {
@@ -69,6 +68,11 @@ export const formatUtils = {
     if (hours < 24) return `${hours}h ago`;
     if (days < 30) return `${days}d ago`;
     return formatUtils.formatDate(date);
+  },
+
+  // Format number with appropriate decimals
+  formatNumber: (amount: number, decimals: number = 2): string => {
+    return amount.toFixed(decimals);
   },
 };
 
