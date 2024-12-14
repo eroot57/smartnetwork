@@ -46,11 +46,11 @@ class HeliusService {
   }
 
   private get baseUrl(): string {
-    return env.getApiUrl('HELIUS');
+    return env.getApiUrl('helius') || 'https://api.helius.xyz/v0';
   }
 
   private get apiKey(): string {
-    const key = env.getApiKey('HELIUS');
+    const key = env.getApiKey('helius');
     if (!key) throw new Error('Helius API key not configured');
     return key;
   }
@@ -72,7 +72,7 @@ class HeliusService {
 
       return await response.json();
     } catch (error) {
-      throw ErrorHandler.createError('NETWORK_ERROR', 'Failed to fetch data from Helius');
+      throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to fetch data from Helius');
     }
   }
 
@@ -109,7 +109,7 @@ class HeliusService {
     const priceData = this.priceCache.get(mint);
     
     if (!priceData) {
-      throw ErrorHandler.createError('VALIDATION_ERROR', 'Token price data not found');
+      throw ErrorHandler.createError(400, 'VALIDATION_ERROR', 'Token price data not found');
     }
 
     return priceData;
@@ -211,7 +211,7 @@ class HeliusService {
       };
     } catch (error) {
       console.error('Failed to setup WebSocket connection:', error);
-      throw ErrorHandler.createError('NETWORK_ERROR', 'Failed to setup price updates');
+      throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to setup price updates');
     }
   }
 

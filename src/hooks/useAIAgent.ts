@@ -1,25 +1,25 @@
 // src/hooks/useAIAgent.ts
 import { useState, useEffect } from 'react';
+//import { walletAI, AIResponse } from '@/lib/ai/agent';
 import { walletAI, AIResponse } from '@/lib/ai/agent';
-import { WalletState } from '@/types/wallet';
-
 interface AIAgentHook {
   isThinking: boolean;
   lastResponse: AIResponse | null;
   askAI: (query: string) => Promise<AIResponse>;
   evaluateTransaction: (toAddress: string, amount: number, purpose?: string) => Promise<AIResponse>;
+  analyzeTransaction: (amount: number, to: string, memo?: string) => Promise<{ suggestion: { type: string }, content: string }>;
   error: string | null;
 }
 
-export function useAIAgent(walletState: WalletState): AIAgentHook {
+export function useAIAgent(config: { balance: string; address: string; isLoading: boolean; error: string | null }): AIAgentHook {
   const [isThinking, setIsThinking] = useState(false);
   const [lastResponse, setLastResponse] = useState<AIResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Update AI context when wallet state changes
+  // Update AI context when config changes
   useEffect(() => {
-    walletAI.updateContext(walletState);
-  }, [walletState]);
+    walletAI.updateContext(config);
+  }, [config]);
 
   const askAI = async (query: string): Promise<AIResponse> => {
     setIsThinking(true);
@@ -59,11 +59,29 @@ export function useAIAgent(walletState: WalletState): AIAgentHook {
     }
   };
 
+  const analyzeTransaction = async (amount: number, to: string, memo?: string) => {
+    setIsThinking(true);
+    setError(null);
+
+    try {
+      // Analyze transaction logic
+      const response = await walletAI.analyzeTransaction(amount, to, memo);
+      return response;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to analyze transaction';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsThinking(false);
+    }
+  };
+
   return {
     isThinking,
     lastResponse,
     askAI,
     evaluateTransaction,
+    analyzeTransaction,
     error
   };
 }

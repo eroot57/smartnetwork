@@ -1,9 +1,10 @@
 // src/lib/ai/agent-service.ts
-import { Agent } from '@a16z/eliza';
+//import { Agent } from '@a16z/eliza';
 import { WalletState } from '@/types/wallet';
 import { ErrorHandler } from '@/lib/utils/error-handling';
 import { apiService } from '@/services/api';
-
+import { Agent } from './agent';
+//import { Agent } from '@solanagaentkit';
 interface AgentContext {
   walletState: WalletState;
   recentTransactions?: Array<any>;
@@ -138,14 +139,14 @@ class AIAgentService {
         .replace('{recentTransactions}', JSON.stringify(this.context.recentTransactions));
 
       const response = await this.agent.process({
-        type: 'message',
+        type: 'analysis',
         content: prompt,
         context: this.context
       });
 
       return this.processAgentResponse(response);
     } catch (error) {
-      throw ErrorHandler.createError('AI_ERROR', 'Failed to analyze transaction');
+      throw ErrorHandler.createError(500, 'AI_ERROR', 'Failed to analyze transaction');
     }
   }
 
@@ -155,14 +156,14 @@ class AIAgentService {
       const prompt = this.prompts.get('marketAnalysis')!;
 
       const response = await this.agent.process({
-        type: 'message',
+        type: 'analysis',
         content: prompt,
         context: this.context
       });
 
       return this.processAgentResponse(response);
     } catch (error) {
-      throw ErrorHandler.createError('AI_ERROR', 'Failed to get market insights');
+      throw ErrorHandler.createError(500, 'AI_ERROR', 'Failed to get market insights');
     }
   }
 
@@ -174,14 +175,14 @@ class AIAgentService {
         .replace('{holdings}', JSON.stringify(this.context.walletState));
 
       const response = await this.agent.process({
-        type: 'message',
+        type: 'analysis',
         content: prompt,
         context: this.context
       });
 
       return this.processAgentResponse(response);
     } catch (error) {
-      throw ErrorHandler.createError('AI_ERROR', 'Failed to get portfolio advice');
+      throw ErrorHandler.createError(500, 'AI_ERROR', 'Failed to get portfolio advice');
     }
   }
 

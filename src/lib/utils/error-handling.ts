@@ -27,43 +27,34 @@ export class WalletError extends Error {
   
   // Error codes and messages mapping
   export const ERROR_CODES = {
-    INSUFFICIENT_BALANCE: 'W001',
-    INVALID_ADDRESS: 'W002',
-    TRANSACTION_FAILED: 'T001',
-    NETWORK_ERROR: 'N001',
-    AI_ERROR: 'A001',
-    VALIDATION_ERROR: 'V001',
-    UNAUTHORIZED: 'AUTH001',
-    RATE_LIMIT: 'R001',
+    INSUFFICIENT_BALANCE: 'INSUFFICIENT_BALANCE',
+    INVALID_ADDRESS: 'INVALID_ADDRESS',
+    TRANSACTION_FAILED: 'TRANSACTION_FAILED',
+    NETWORK_ERROR: 'NETWORK_ERROR',
+    AI_ERROR: 'AI_ERROR',
+    VALIDATION_ERROR: 'VALIDATION_ERROR',
+    UNAUTHORIZED: 'UNAUTHORIZED',
+    RATE_LIMIT: 'RATE_LIMIT',
+    REQUEST_TIMEOUT: 'REQUEST_TIMEOUT',
+    WALLET_CREATION_FAILED: 'WALLET_CREATION_FAILED',
+    BALANCE_FETCH_FAILED: 'BALANCE_FETCH_FAILED',
+    TOKEN_BALANCE_FETCH_FAILED: 'TOKEN_BALANCE_FETCH_FAILED',
   } as const;
   
-  export const ERROR_MESSAGES = {
-    [ERROR_CODES.INSUFFICIENT_BALANCE]: 'Insufficient balance to complete this transaction',
-    [ERROR_CODES.INVALID_ADDRESS]: 'Invalid wallet address provided',
+  export const ERROR_MESSAGES: Record<keyof typeof ERROR_CODES, string> = {
+    [ERROR_CODES.INSUFFICIENT_BALANCE]: 'Insufficient balance',
+    [ERROR_CODES.INVALID_ADDRESS]: 'Invalid address',
     [ERROR_CODES.TRANSACTION_FAILED]: 'Transaction failed to complete',
     [ERROR_CODES.NETWORK_ERROR]: 'Network connection error',
     [ERROR_CODES.AI_ERROR]: 'AI assistant encountered an error',
     [ERROR_CODES.VALIDATION_ERROR]: 'Invalid input provided',
     [ERROR_CODES.UNAUTHORIZED]: 'Unauthorized access',
-    [ERROR_CODES.RATE_LIMIT]: 'Rate limit exceededd',
-    INSUFFICIENT_BALANCE: 'INSUFFICIENT_BALANCE',
-  
-    INVALID_ADDRESS: 'INVALID_ADDRESS',
-  
-    TRANSACTION_FAILED: 'TRANSACTION_FAILED',
-  
-    NETWORK_ERROR: 'NETWORK_ERROR',
-  
-    AI_ERROR: 'AI_ERROR',
-  
-    VALIDATION_ERROR: 'VALIDATION_ERROR',
-  
-    UNAUTHORIZED: 'UNAUTHORIZED',
-  
-    RATE_LIMIT: 'RATE_LIMIT',
-  
-    REQUEST_TIMEOUT: 'REQUEST_TIMEOUT',
-  } as const;
+    [ERROR_CODES.RATE_LIMIT]: 'Rate limit exceeded',
+    [ERROR_CODES.REQUEST_TIMEOUT]: 'Request timeout',
+    [ERROR_CODES.WALLET_CREATION_FAILED]: 'Wallet creation failed',
+    [ERROR_CODES.BALANCE_FETCH_FAILED]: 'Balance fetch failed',
+    [ERROR_CODES.TOKEN_BALANCE_FETCH_FAILED]: 'Token balance fetch failed',
+  };
   
   // Error handler class
   export class ErrorHandler {
@@ -183,7 +174,7 @@ export class WalletError extends Error {
     }
   
     // Create error instance from code
-    public static createError(code: keyof typeof ERROR_CODES, additionalInfo?: string): WalletError {
+    public static createError(status: number, code: keyof typeof ERROR_CODES, additionalInfo?: string): WalletError {
       const message = `${ERROR_MESSAGES[code as keyof typeof ERROR_MESSAGES]}${additionalInfo ? `: ${additionalInfo}` : ''}`;
       return new WalletError(message, code);
     }

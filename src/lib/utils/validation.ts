@@ -1,3 +1,5 @@
+import { WalletState } from "@/types/wallet";
+
 export const validationUtils = {
     // Validate Solana address
     isValidSolanaAddress: (address: string): boolean => {

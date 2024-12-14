@@ -1,11 +1,15 @@
 import React, { useMemo } from "react";
+
+function getRpcUrl() {
+  // Define your RPC URL here
+  return "https://api.testnet.solana.com";
+}
 import {
   ConnectionProvider,
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { getRpcUrl } from "@/utils/environment";
 
 export default function AppWalletProvider({
   children,

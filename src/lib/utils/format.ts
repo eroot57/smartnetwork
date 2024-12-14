@@ -1,4 +1,3 @@
-import { WalletState } from '@/types/wallet';
 
 export const formatUtils = {
   // Format SOL amount with appropriate decimals
@@ -72,3 +71,6 @@ export const formatUtils = {
     return formatUtils.formatDate(date);
   },
 };
+
+
+

@@ -1,21 +1,21 @@
 // src/services/api.ts
 import { ErrorHandler } from '@/lib/utils/error-handling';
 
-interface APIConfig {
-  baseURL: string;
-  apiKey: string;
-  timeout?: number;
-}
-
-interface RequestConfig {
+export interface ApiRequestConfig<T = any> {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   path: string;
-  body?: any;
+  body?: T;
   headers?: Record<string, string>;
   timeout?: number;
 }
 
-interface APIResponse<T> {
+interface APIConfig {
+  baseURL: string;
+  apiKey: string;
+  timeout: number;
+}
+
+export interface APIResponse<T> {
   data: T;
   status: number;
   headers: Headers;
@@ -23,6 +23,7 @@ interface APIResponse<T> {
 
 class APIService {
   private static instance: APIService;
+  private baseUrl: string = process.env.NEXT_PUBLIC_API_BASE_URL || '';
   private config: APIConfig;
   private controller: AbortController;
 
@@ -42,7 +43,24 @@ class APIService {
     return APIService.instance;
   }
 
-  private async request<T>(config: RequestConfig): Promise<APIResponse<T>> {
+  public async sendRequest<T>(config: ApiRequestConfig): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${config.path}`, {
+      method: config.method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...config.headers,
+      },
+      body: config.body ? JSON.stringify(config.body) : undefined,
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  private async request<T>(config: ApiRequestConfig): Promise<APIResponse<T>> {
     const { method, path, body, headers = {}, timeout = this.config.timeout } = config;
 
     // Create new abort controller for this request
@@ -97,7 +115,7 @@ class APIService {
 
   private handleRequestError(error: any): Error {
     if (error.name === 'AbortError') {
-      return ErrorHandler.createError('REQUEST_TIMEOUT', 'Request timed out');
+      return ErrorHandler.createError(408, 'REQUEST_TIMEOUT', 'Request timed out');
     }
     return error;
   }

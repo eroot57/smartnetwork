@@ -1,63 +1,75 @@
 // src/components/wallet/WalletInfo.tsx
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useContext } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { useCompressedTokenBalance } from '@/hooks/useCompressedTokenBalance';
+import { WalletContext } from '@/context/walletContext';
+import { Loader } from '../ui/loader';
+import { formatUtils } from '@/lib/utils/format';
 import { Wallet, RefreshCw } from 'lucide-react';
-import { useCrossmintWallet } from '@/hooks/useCrossmintWallet';
 
 export function WalletInfo() {
-  const { address, balance, isLoading, error, refreshBalance } = useCrossmintWallet();
-  const [refreshing, setRefreshing] = useState(false);
+  const { publicKey } = useContext(WalletContext);
+  const { balance: solBalance, isLoading: isLoadingSol } = useWalletBalance();
+  const { compressedTokens, isLoading: isLoadingTokens } = useCompressedTokenBalance();
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await refreshBalance();
-    setRefreshing(false);
-  };
+  const isLoading = isLoadingSol || isLoadingTokens;
+
+  if (!publicKey) {
+    return null;
+  }
 
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <p className="text-center">Initializing wallet...</p>
+        <CardContent className="flex items-center justify-center p-6">
+          <Loader />
         </CardContent>
       </Card>
     );
   }
 
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const totalCompressedTokens = compressedTokens?.length || 0;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-5 h-5" />
-            <span>Solana Wallet</span>
-          </div>
-          <button
-            onClick={handleRefresh}
-            className="p-2 hover:bg-gray-100 rounded-full"
-            disabled={refreshing}
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
+        <CardTitle className="flex items-center gap-2">
+          <Wallet className="w-5 h-5" />
+          Wallet Overview
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <p className="text-sm text-gray-500">Address</p>
-          <p className="font-mono text-sm break-all">{address}</p>
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">Balance</p>
-          <p className="text-2xl font-bold">{balance} SOL</p>
+      <CardContent>
+        <div className="space-y-4">
+          {/* SOL Balance */}
+          <div className="p-4 bg-secondary rounded-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">SOL Balance</p>
+                <p className="text-2xl font-bold">{formatUtils.formatSOL(solBalance || 0)}</p>
+              </div>
+              <img src="/solana-logo.svg" alt="SOL" className="w-8 h-8" />
+            </div>
+          </div>
+
+          {/* Compressed Tokens Summary */}
+          <div className="p-4 border rounded-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-muted-foreground">Compressed Tokens</p>
+                <p className="text-2xl font-bold">{totalCompressedTokens}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet Address */}
+          <div className="pt-4">
+            <p className="text-sm text-muted-foreground">Wallet Address</p>
+            <p className="font-mono text-sm break-all">{publicKey.toString()}</p>
+          </div>
         </div>
       </CardContent>
     </Card>
