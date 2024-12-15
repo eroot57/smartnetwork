@@ -4,8 +4,13 @@ import { aiAgentService } from '@/lib/ai/agent-service';
 import { crossmintService } from '@/services/crossmint';
 import { heliusService } from '@/services/helius';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { PropsWithChildren } from 'react';
+import type { ReactNode } from 'react';
 import { Toaster } from '@/components/ui/toaster';
+
+// Update Props type to avoid empty object
+interface ProviderProps {
+  children: ReactNode;
+}
 
 // Wallet Context
 interface WalletContextType {
@@ -70,7 +75,7 @@ interface MarketAnalysis {
   };
 }
 
-export function Providers({ children }: PropsWithChildren<{}>) {
+export function Providers({ children }: ProviderProps) {
   const [walletState, setWalletState] = useState<WalletContextType>({
     publicKey: null,
     connected: false,
@@ -86,7 +91,7 @@ export function Providers({ children }: PropsWithChildren<{}>) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalysis, setLastAnalysis] = useState<AIContextType['lastAnalysis']>(null);
 
-  const updateBalance = async () => {
+  const updateBalance = useCallback(async () => {
     if (!walletState.publicKey) return;
 
     setWalletState(prev => ({ ...prev, connecting: true }));
@@ -98,14 +103,52 @@ export function Providers({ children }: PropsWithChildren<{}>) {
         connecting: false,
         error: null
       }));
-    } catch (error) {
+    } catch (_error) { // Use underscore to indicate unused variable
       setWalletState(prev => ({
         ...prev,
         connecting: false,
         error: 'Failed to fetch balance'
       }));
     }
-  };
+  }, [walletState.publicKey]);
+
+  const disconnectWallet = useCallback(async () => {
+    localStorage.removeItem('walletAddress');
+    setWalletState(prev => ({
+      ...prev,
+      publicKey: null,
+      connected: false,
+      connecting: false
+    }));
+  }, []);
+
+  const selectWallet = useCallback((_walletName: string) => {
+    // Implementation will be added later
+  }, []);
+
+  const createMint = useCallback(async (decimals = 0, authority?: string): Promise<PublicKey> => {
+    if (!walletState.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+    const mint = await crossmintService.createMint({
+      decimals,
+      authority: authority || walletState.publicKey.toString()
+    });
+    return new PublicKey(mint.address);
+  }, [walletState.publicKey]);
+
+  const initializeServices = useCallback(async (publicKey: PublicKey) => {
+    await aiAgentService.initializeAgent({
+      walletState: {
+        address: publicKey.toString(),
+        balance: walletState.balance || '',
+        isLoading: walletState.connecting,
+        error: walletState.error || null,
+      }
+    });
+    
+    await heliusService.subscribeToPriceUpdates([publicKey.toString()], updateBalance);
+  }, [walletState.balance, walletState.connecting, walletState.error, updateBalance]);
 
   const connectWallet = useCallback(async () => {
     setWalletState(prev => ({ ...prev, connecting: true }));
@@ -127,7 +170,7 @@ export function Providers({ children }: PropsWithChildren<{}>) {
 
       await updateBalance();
       await initializeServices(publicKey);
-    } catch (error) {
+    } catch (_error) {
       setWalletState(prev => ({
         ...prev,
         publicKey: null,
@@ -136,86 +179,34 @@ export function Providers({ children }: PropsWithChildren<{}>) {
         error: 'Failed to connect wallet'
       }));
     }
-  }, []);
+  }, [createMint, disconnectWallet, selectWallet, updateBalance, initializeServices]);
 
-  const disconnectWallet = useCallback(async () => {
-    localStorage.removeItem('walletAddress');
-    setWalletState(prev => ({
-      ...prev,
-      publicKey: null,
-      connected: false,
-      connecting: false
-    }));
-  }, []);
-
-  const selectWallet = useCallback((walletName: string) => {
-    // Implement wallet selection logic
-  }, []);
-
-  const createMint = useCallback(async (decimals = 0, authority?: string): Promise<PublicKey> => {
-    if (!walletState.publicKey) {
-      throw new Error('Wallet not connected');
-    }
-    // Implement mint creation logic
-    const mint = await crossmintService.mintToken({
-      decimals,
-      authority: authority || walletState.publicKey.toString()
-    }) as unknown as { address: string };
-    return new PublicKey(mint.address);
-  }, [walletState.publicKey]);
-
-  const initializeServices = async (publicKey: PublicKey) => {
-    await aiAgentService.initializeAgent({
-      walletState: {
-        address: publicKey.toString(),
-        balance: walletState.balance || '',
-        isLoading: walletState.connecting,
-        error: walletState.error || null,
-      }
-    });
-    
-    await heliusService.subscribeToPriceUpdates([publicKey.toString()], updateBalance);
-  };
-
-  const analyzeTransaction = async (amount: number, recipient: string) => {
+  const analyzeTransaction = useCallback(async (amount: number, recipient: string) => {
     setIsAnalyzing(true);
     try {
-      const analysis: AIAnalysis = await aiAgentService.analyzeTransaction(
-        amount,
-        recipient,
-        'Transaction purpose' // Add the purpose argument if needed
-      );
-
+      const analysis = await aiAgentService.analyzeTransaction(amount, recipient, 'Transaction purpose');
       setLastAnalysis({
         risk: analysis.analysis?.risk,
         recommendation: analysis.analysis?.suggestion,
-        details: analysis.analysis?.factors
+        details: analysis.analysis?.factors || []
       });
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, []);
 
-  const getMarketInsights = async () => {
+  const getMarketInsights = useCallback(async () => {
     setIsAnalyzing(true);
     try {
       const insights = await aiAgentService.getMarketInsights();
-      const formattedInsights: MarketAnalysis = {
-        trend: insights.trend,
-        analysis: {
-          summary: insights.analysis?.recommendation || '',
-          details: insights.analysis?.factors || [],
-          recommendations: [insights.analysis?.suggestion || '']
-        }
-      };
       setLastAnalysis({
-        recommendation: formattedInsights.analysis.summary,
-        details: formattedInsights.analysis.recommendations
+        recommendation: insights.analysis.recommendation,
+        details: insights.analysis.factors || []
       });
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initializeWallet = async () => {

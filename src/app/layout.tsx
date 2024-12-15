@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import { Inter } from 'next/font/google';
-import { env } from '@/config/env';
+import { config } from '@/config/env';
 import '../styles/globals.css';
 
 // Initialize Inter font
@@ -19,7 +19,7 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
-  const isDevelopment = env.isDevelopment();
+  const isDevelopment = config.NODE_ENV === 'development';
 
   return (
     <html lang="en" suppressHydrationWarning>

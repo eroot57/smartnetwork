@@ -10,70 +10,58 @@ declare namespace NodeJS {
     }
   }
   
-  type APIResponse<T = unknown> = {
-    success: boolean
-    data: T
+declare global {
+  // Generic API Response type
+  type ApiResponse<T = unknown> = {
+    success: boolean;
+    data: T;
     error?: {
-      code: string
-      message: string
-      details?: Record<string, unknown>
-    }
+      code: string;
+      message: string;
+      details?: Record<string, unknown>;
+    };
+  };
+
+  // Common Error type
+  interface AppError extends Error {
+    code?: string;
+    details?: Record<string, unknown>;
   }
-  
-  type ErrorResponse = {
-    code: string
-    message: string
-    details?: Record<string, unknown>
-  }
-  
-  interface TransactionError extends Error {
-    code?: string
-    data?: unknown
-  }
-  
-  // Common types for wallet operations
-  type WalletBalance = {
-    amount: string
-    currency: string
-    usdValue?: number
-  }
-  
-  type TokenBalance = {
-    mint: string
-    symbol: string
-    decimals: number
-    amount: string
-    uiAmount: number
-  }
-  
-  // AI types
-  type AIAnalysis = {
-    risk: number
-    recommendation: string
-    factors: string[]
-    confidence: number
-  }
-  
-  type AIContext = {
-    walletState: WalletState
-    marketData?: MarketData
-    transactionHistory?: Transaction[]
-  }
-  
+
+  // Generic Record type for unknown values
+  type UnknownRecord = Record<string, unknown>;
+
+  // Common callback types
+  type VoidCallback = () => void;
+  type AsyncVoidCallback = () => Promise<void>;
+  type ErrorCallback = (error: AppError) => void;
+
   // Transaction types
   type Transaction = {
-    signature: string
-    timestamp: number
-    type: 'send' | 'receive' | 'swap'
-    amount: number
-    status: 'success' | 'pending' | 'error'
-    to?: string
-    from?: string
-  }
-  
+    signature: string;
+    timestamp: number;
+    type: 'send' | 'receive' | 'swap';
+    amount: number;
+    status: 'success' | 'pending' | 'error';
+    to?: string;
+    from?: string;
+  };
+
   type MarketData = {
-    price: number
-    change24h: number
-    volume24h: number
-    marketCap: number
+    price: number;
+    change24h: number;
+    volume24h: number;
+    marketCap: number;
+  };
+
+  interface WalletState {
+    publicKey: string | null;
+    balance: string | null;
+    connecting: boolean;
+    connected: boolean;
+    error: string | null;
+    transactionHistory?: Transaction[];
   }
+}
+
+export {};
