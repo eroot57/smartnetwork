@@ -1,13 +1,13 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@solana/wallet-adapter-react";
-
+import { WalletContext, WalletContextState } from '../context/walletContext';
 import { MintCreatedModal } from "@/components/modals/MintCreatedSuccess";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type Props = {
   onSubmit?: () => void;
@@ -15,43 +15,41 @@ type Props = {
 
 const CreateMint = ({ onSubmit }: Props) => {
   const { publicKey: connectedWallet } = useWallet();
-  const { createMint } = useZKCompression();
   const { toast } = useToast();
+  const { createMint } = useContext(WalletContext) as WalletContextState;
   const [authority, setAuthority] = useState(connectedWallet?.toBase58() || "");
-  const [decimals, setDecimals] = useState<string | number>(9);
+  const [decimals, setDecimals] = useState<number>(9);
   const [isCreating, setIsCreating] = useState(false);
   const [newMintAddress, setNewMintAddress] = useState<string | null>(null);
 
-  const canSend = !!authority && decimals !== "";
+  const canSend = !!authority && decimals > 0;
 
   const handleCreateMint = async () => {
     if (!canSend) return;
     try {
       setIsCreating(true);
-      const { mint: newMintAddress } = await createMint({
-        authority: new PublicKey(authority),
-        decimals: Number(decimals || 0),
-      });
-      setNewMintAddress(newMintAddress.toBase58());
+      const newMint = await createMint();
+      const newMintAddress = newMint.toBase58();
+      setNewMintAddress(newMintAddress);
       onSubmit?.();
+      toast({
+        title: "Success",
+        description: "Mint created successfully",
+        variant: "default",
+      });
     } catch (error: any) {
       const isInsufficientBalance = error?.message
         ?.toLowerCase()
         .includes("not enough balance");
-      if (isInsufficientBalance) {
-        console.log("Insufficient balance");
-        toast({
-          title: "Insufficient balance",
-          description: "You do not have enough balance to send tokens",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "An error occurred while sending tokens",
-          variant: "destructive",
-        });
-      }
+      
+      toast({
+        title: isInsufficientBalance ? "Insufficient balance" : "Error",
+        description: isInsufficientBalance 
+          ? "You do not have enough balance to create mint" 
+          : "An error occurred while creating mint",
+        variant: "destructive",
+      });
+      console.error('Failed to create mint:', error);
     } finally {
       setIsCreating(false);
     }
@@ -74,20 +72,21 @@ const CreateMint = ({ onSubmit }: Props) => {
           <h1 className="text-4xl font-semibold text-gray-700 pb-7 w-full">
             Create Mint
           </h1>
-          <div className="pb-5">
-            <div className="w-full">
+          <div className="pb-5 space-y-4">
+            <div>
               <Label>Decimals</Label>
               <Input
-                 className="w-full"
+                className="w-full"
                 disabled={isCreating}
                 type="number"
                 placeholder="9"
                 value={decimals}
+                min={0}
+                max={9}
                 onChange={(e) => {
-                  if (Number(e.target.value) > 0) {
-                    setDecimals(Number(e.target.value));
-                  } else {
-                    setDecimals("");
+                  const value = parseInt(e.target.value);
+                  if (value >= 0 && value <= 9) {
+                    setDecimals(value);
                   }
                 }}
               />

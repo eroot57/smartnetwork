@@ -1,16 +1,31 @@
-import { useContext } from 'react';
+import React, { useContext } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { useWalletBalance } from '@/hooks/useWalletBalance'; // Adjust the import path as necessary
-import WalletContext from '@/context/walletContext'; // Adjust the import path as necessary
-import { Loader } from '../ui/loader';
+import { WalletContext, WalletContextState } from '@/context/walletContext';
+//import Loader from '../components/Loader';
 import { formatUtils } from '@/lib/utils/format';
 import { Wallet } from 'lucide-react';
 import { useSolBalance } from '@/hooks/useSolBalance';
+import { Loader } from '../ui/loader';
+//import useWalletBalance from '../hooks/useWalletBalance';
+
+interface Token {
+  name: string;
+  symbol: string;
+  decimals: number;
+  amount: string;
+}
+
+interface UseSolBalanceHook {
+  balance: number | null;
+  loading: boolean;
+  tokens: Token[];
+  error?: Error;
+}
 
 export function WalletInfo() {
-  const { publicKey } = useContext(WalletContext);
-  const { balance: solBalance, isLoading: isLoadingSol } = useWalletBalance();
-  const { tokens, isLoading: isLoadingTokens } = useSolBalance();
+  const { publicKey } = useContext(WalletContext) as WalletContextState;
+  const { balance: solBalance, loading: isLoadingSol } = useWalletBalance();
+  const { tokens, loading: isLoadingTokens } = useSolBalance();
 
   const isLoading = isLoadingSol || isLoadingTokens;
 
@@ -56,8 +71,8 @@ export function WalletInfo() {
                 <div>
                   <p className="text-sm text-muted-foreground">Token Balances</p>
                   <ul>
-                    {tokens.map((token) => (
-                      <li key={token.mint}>
+                    {tokens.map((token: Token) => (
+                      <li key={token.name}>
                         {token.symbol}: {formatUtils.formatNumber(parseFloat(token.amount), token.decimals)}
                       </li>
                     ))}
@@ -76,4 +91,10 @@ export function WalletInfo() {
       </CardContent>
     </Card>
   );
+}
+
+export default WalletInfo;
+
+function useWalletBalance(): { balance: any; loading: any; } {
+  throw new Error('Function not implemented.');
 }

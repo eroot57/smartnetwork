@@ -1,4 +1,27 @@
-import React, { useMemo } from "react";
+import React, { useMemo, createContext } from "react";
+import { PublicKey } from '@solana/web3.js';
+
+export interface WalletContextState {
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting: boolean;
+  disconnect(): Promise<void>;
+  connect(): Promise<void>;
+  select(walletName: string): void;
+  createMint(decimals?: number, authority?: string): Promise<PublicKey>; // Update createMint method
+}
+
+export const WalletContext = createContext<WalletContextState>({
+  publicKey: null,
+  connected: false,
+  connecting: false,
+  disconnect: async () => {},
+  connect: async () => {},
+  select: () => {},
+  createMint: async () => {
+    throw new Error('createMint not implemented'); // Update default implementation
+  },
+});
 
 function getRpcUrl() {
   // Define your RPC URL here

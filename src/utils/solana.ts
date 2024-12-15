@@ -90,7 +90,7 @@ export const checkIfAtaExist = async ({
 }) => {
   const lightRpc = getLightRpc();
 
-  let ata = getAssociatedTokenAddress({
+  const ata = getAssociatedTokenAddress({
     owner,
     mint,
   });

@@ -15,7 +15,19 @@ interface Transaction {
   error?: string;
 }
 
+interface MintTokenParams {
+  decimals: number;
+  authority: string;
+}
+
+interface MintTokenResponse {
+  address: string;
+}
+
 class CrossmintService {
+  mintToken(arg0: { decimals: number; authority: string; }) {
+    throw new Error('Method not implemented.');
+  }
   private apiKey: string;
 
   constructor() {
@@ -43,6 +55,18 @@ class CrossmintService {
   async getTransactionStatus(txId: string): Promise<string> {
     const response = await this.fetchApi<{ status: string }>(`/transactions/${txId}/status`);
     return response.status;
+  }
+
+  async createMint(params: MintTokenParams): Promise<MintTokenResponse> {
+    const response = await this.fetchApi<MintTokenResponse>('/mint', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(params),
+    });
+    return response;
   }
 
   private async fetchApi<T>(
