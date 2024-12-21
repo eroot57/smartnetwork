@@ -1,3 +1,156 @@
+# AI-Powered Solana Wallet
+
+A next-generation Solana wallet with integrated AI capabilities for intelligent transaction analysis, portfolio management, and market insights.
+
+## 🌟 Features
+
+### AI Integration
+- Real-time transaction analysis and risk assessment
+- Market insights and trading suggestions
+- Portfolio optimization recommendations
+- Intelligent wallet management
+
+### Wallet Features
+- Compressed token support (zkCompression)
+- Multi-token management
+- Integrated DEX swaps
+- Transaction history with AI analysis
+- Portfolio analytics
+- NFT support
+
+### Technical Features
+- Built with Next.js 13+ (App Router)
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Integration with major Solana protocols
+  - Jupiter for swaps
+  - Helius for RPC
+  - Crossmint for wallet management
+  - Meteora/Orca for LP management
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm/pnpm
+- A Solana wallet (Phantom, Solflare, etc.)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/ai-solana-wallet.git
+
+# Navigate to the project directory
+cd ai-solana-wallet
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+
+# Start development server
+npm run dev
+```
+
+### Environment Variables
+Create a `.env.local` file with the following:
+```env
+# Solana Network Configuration
+NEXT_PUBLIC_SOLANA_NETWORK=devnet
+NEXT_PUBLIC_LOCAL_RPC_URL=http://localhost:8899
+NEXT_PUBLIC_DEVNET_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_MAINNET_RPC_URL=https://api.mainnet-beta.solana.com
+
+# AI Service Configuration
+NEXT_PUBLIC_AI_SERVICE_URL=your_ai_service_url
+NEXT_PUBLIC_AI_SERVICE_KEY=your_ai_service_key
+
+# Wallet Configuration
+NEXT_PUBLIC_WALLET_AUTOCONNECT=false
+```
+
+## 📖 Project Structure
+```
+src/
+├── app/              # Next.js 13 app directory
+├── components/       # React components
+├── lib/             # Core libraries
+│   ├── ai/          # AI integration
+│   ├── wallet/      # Wallet functionality
+│   └── utils/       # Utilities
+├── services/        # External services
+├── hooks/           # Custom React hooks
+└── types/           # TypeScript types
+```
+
+## 🛠 Development
+
+### Available Scripts
+```bash
+# Development
+npm run dev
+
+# Build
+npm run build
+
+# Production
+npm run build:prod
+npm start
+
+# Linting
+npm run lint
+npm run lint:fix
+```
+
+### Key Technologies
+- Next.js 13+
+- TypeScript
+- Tailwind CSS
+- Solana Web3.js
+- AI Integration (Claude/GPT)
+- shadcn/ui components
+
+## 🔐 Security
+
+This wallet implements several security features:
+- AI-powered transaction analysis
+- Multi-signature support via Lit Protocol
+- Trusted Execution Environment (TEE) verification
+- Error boundaries and recovery mechanisms
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgements
+
+- Solana Foundation
+- Anthropic (Claude AI)
+- Jupiter Aggregator
+- Helius
+- Crossmint
+- All other contributors and sponsors
+
+## ⚡️ Quick Links
+
+- [Documentation](docs/README.md)
+- [API Reference](docs/API.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Security Policy](SECURITY.md)
+
+---
+
+Built for the Solana AI Agent Hackathon 2024 🚀
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
