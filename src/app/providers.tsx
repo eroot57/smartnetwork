@@ -144,6 +144,9 @@ export function Providers({ children }: ProviderProps) {
         balance: walletState.balance || '',
         isLoading: walletState.connecting,
         error: walletState.error || null,
+        publicKey: null,
+        connected: false,
+        connecting: false
       }
     });
     

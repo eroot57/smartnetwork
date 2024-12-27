@@ -120,7 +120,7 @@ export const checkIfAccountExist = async (account: PublicKey) => {
     try {
       const connection = new Connection(getRpcUrl());
       await getAccount(connection, account);
-      await getAccount(lightRpc, account);
+      // Removed invalid getAccount call with lightRpc
       accountExist = true;
     } catch (error: any) {
       // we assume the ata is not valid if we get an error

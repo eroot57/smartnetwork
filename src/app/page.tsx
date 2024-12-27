@@ -1,4 +1,3 @@
-// src/app/page.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -7,37 +6,60 @@ import { AIAssistant } from '@/components/wallet/AIAssistant';
 import SendTransaction from '@/components/wallet/SendTransaction';
 import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 import { TokenManager } from '@/components/wallet/TokenManager';
-//import { NFTGallery } from '@/components/wallet/NFTGallery';
 import { Settings } from '@/components/wallet/WalletSettings';
 import { PortfolioAnalytics } from '@/components/wallet/PortfolioAnalytics';
 import { useWallet } from './providers';
+import type { WalletState } from '@/types/wallet';
 
 export default function Home() {
-  const { walletState, connectWallet } = useWallet();
+  const { 
+    publicKey, 
+    connected, 
+    connecting, 
+    connect, 
+    disconnect, 
+    select, 
+    createMint,
+    balance,
+    error 
+  } = useWallet();
+
+  // Create a wallet state object from the context values
+  const walletState: WalletState = {
+    publicKey,
+    connected,
+    connecting,
+    address: publicKey?.toBase58() || '',
+    balance: balance || '0',
+    error: error || null,
+    isLoading: connecting
+  };
 
   useEffect(() => {
-    if (!walletState.address) {
-      connectWallet();
+    if (!publicKey && !connecting) {
+      connect();
     }
-  }, []);
+  }, [publicKey, connecting, connect]);
 
-  if (walletState.isLoading) {
+  if (connecting) {
     return (
-      <div className="flex-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <p className="mt-2">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  if (!walletState.address) {
+  if (!publicKey) {
     return (
-      <div className="flex-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">Welcome to AI-Powered Solana Wallet</h1>
-          <p className="text-gray-600">Please connect your wallet to continue</p>
-          <button
-            onClick={() => connectWallet()}
-            className="button-primary"
+          <button 
+            onClick={connect} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Connect Wallet
           </button>
@@ -47,12 +69,17 @@ export default function Home() {
   }
 
   return (
-    <div className="container-padding py-8">
+    <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
           <WalletInfo />
-          <SendTransaction balance={''} address={''} isLoading={false} error={null} />
+          <SendTransaction 
+            balance={balance || ''} 
+            address={publicKey.toBase58()} 
+            isLoading={connecting}
+            error={error || null}
+          />
           <Settings />
         </div>
 
@@ -67,7 +94,6 @@ export default function Home() {
       <div className="mt-8 space-y-6">
         <TokenManager walletState={walletState} />
         <TransactionHistory walletState={walletState} />
-        
       </div>
     </div>
   );

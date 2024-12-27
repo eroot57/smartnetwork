@@ -1,5 +1,5 @@
 // src/services/helius.ts
-import { env } from '@/config/env';
+import { config } from '@/config/env';
 import { ErrorHandler } from '@/lib/utils/error-handling';
 import { WALLET_CONSTANTS } from '@/config/constants';
 
@@ -35,7 +35,7 @@ class HeliusService {
   private constructor() {
     this.priceCache = new Map();
     this.metadataCache = new Map();
-    this.lastPriceUpdate = new Date(0);
+    this.lastPriceUpdate = new Date();
   }
 
   public static getInstance(): HeliusService {
@@ -45,23 +45,21 @@ class HeliusService {
     return HeliusService.instance;
   }
 
-  private get baseUrl(): string {
-    return env.getApiUrl('helius') || 'https://api.helius.xyz/v0';
+  private getApiUrl(): string {
+    return config.NEXT_PUBLIC_HELIUS_API_URL;
   }
 
-  private get apiKey(): string {
-    const key = env.getApiKey('helius');
-    if (!key) throw new Error('Helius API key not configured');
-    return key;
+  private getApiKey(): string {
+    return config.NEXT_PUBLIC_HELIUS_API_KEY;
   }
 
   private async makeRequest<T>(endpoint: string, method: string = 'GET', body?: any): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
+          'Authorization': `Bearer ${this.getApiKey()}`
         },
         body: body ? JSON.stringify(body) : undefined
       });
@@ -176,7 +174,7 @@ class HeliusService {
     let ws: WebSocket | null = null;
 
     try {
-      ws = new WebSocket(`wss://api.helius.xyz/v0/ws?api-key=${this.apiKey}`);
+      ws = new WebSocket(`wss://api.helius.xyz/v0/ws?api-key=${this.getApiKey()}`);
 
       ws.onopen = () => {
         ws?.send(JSON.stringify({

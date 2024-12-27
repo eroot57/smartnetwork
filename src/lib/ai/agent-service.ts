@@ -67,7 +67,10 @@ class AIAgentService {
         address: '',
         balance: '0',
         isLoading: false,
-        error: null
+        error: null,
+        publicKey: null,
+        connected: false,
+        connecting: false
       }
     };
 

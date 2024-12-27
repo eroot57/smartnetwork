@@ -8,6 +8,9 @@ import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 export function useCrossmintWallet() {
   const { publicKey, connected } = useContext(WalletContext);
   const [walletState, setWalletState] = useState<WalletState>({
+    publicKey: null,
+    connected: false,
+    connecting: false,
     address: '',
     balance: '0',
     isLoading: true,
@@ -28,12 +31,16 @@ export function useCrossmintWallet() {
       const wallet = await crossmintService.createWallet();
       const balance = await crossmintService.getBalance(wallet.address);
       
-      setWalletState({
+      setWalletState(prev => ({
+        ...prev,
+        publicKey: new PublicKey(wallet.address),
+        connected: true,
+        connecting: false,
         address: wallet.address,
         balance: balance.balance,
         isLoading: false,
         error: null,
-      });
+      }));
     } catch (error) {
       setWalletState(prev => ({
         ...prev,
@@ -95,6 +102,15 @@ export function useCrossmintWallet() {
 
 const useWalletBalance = () => {
   const { publicKey, connected } = useContext(WalletContext);
+  const [walletState, setWalletState] = useState<WalletState>({
+    publicKey: null,
+    connected: false,
+    connecting: false,
+    address: '',
+    balance: '0',
+    isLoading: true,
+    error: null,
+  });
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

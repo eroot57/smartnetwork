@@ -7,6 +7,7 @@ import {
   PublicKey,
   // AddressLookupTableAccount,
   Signer,
+  Connection,
 } from "@solana/web3.js";
 import {
   TYPE_SIZE,
@@ -90,7 +91,7 @@ export const getTxnForSigning = (
 };
 
 export const getMintRentExemption = async (metaData?: TokenMetadata) => {
-  const lightRpc = getLightRpc();
+  const lightRpc = new Connection(getRpcUrl());
 
   let dataLength = MINT_SIZE;
   if (metaData) {
@@ -126,7 +127,7 @@ export const deriveCpiAuthorityPda = (): PublicKey => {
 };
 
 export const getCompressedMintProgam = (connectedWallet: PublicKey) => {
-  const lightRpc = getLightRpc();
+  const lightRpc = new Connection(getRpcUrl());
   // @ts-ignore
   const provider = new AnchorProvider(lightRpc, connectedWallet, {
     commitment: "confirmed",
@@ -142,7 +143,7 @@ export const getCompressedMintInfo = async ({
   // owner: PublicKey;
   mint: PublicKey;
 }): Promise<CompressedTokenDetails> => {
-  const lightRpc = getLightRpc();
+  const lightRpcInstance = getLightRpc();
   // fetch compressed account from helius
   const compressedAccountResponse = await fetch(getRpcUrl(), {
     method: "POST",
@@ -161,6 +162,7 @@ export const getCompressedMintInfo = async ({
   const compressedAccountResponseData = await compressedAccountResponse.json();
   const compressedAccountInfo = compressedAccountResponseData?.result?.value;
   // fetch mint info from solana
+  const lightRpc = new Connection(getRpcUrl());
   const mintInfo = await getMint(lightRpc, mint);
   const formattedCompressedAccountInfo: CompressedTokenDetails = {
     account: {
@@ -238,8 +240,8 @@ export const fetCompressedTokenBalances = async (wallet: PublicKey, mint?: strin
 };
 
 export const fetchCompressedSignatures = async (wallet: PublicKey) => {
-  const lightRpc = getLightRpc();
+  const lightRpc = new Connection(getRpcUrl());
   const compressedSignatures =
-    await lightRpc.getCompressionSignaturesForOwner(wallet);
+    await getLightRpc().getCompressionSignaturesForOwner(wallet);
   console.log("compressedSignatures", compressedSignatures);
 };
