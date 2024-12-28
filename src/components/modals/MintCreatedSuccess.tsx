@@ -1,49 +1,103 @@
-import { Button } from "@/components/ui/button";
+// src/components/modals/MintCreatedSuccess.tsx
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-// import { openExplorerUrl } from "@/utils/solana";
-import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Copy, ExternalLink } from "lucide-react";
+import { useState } from "react";
 
-export function MintCreatedModal({
-  isOpen,
-  onClose,
-  mintAddress,
-}: {
-  isOpen: boolean;
+interface MintCreatedSuccessProps {
+  open: boolean;
   onClose: () => void;
   mintAddress: string;
-}) {
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(mintAddress);
+}
+
+const MintCreatedSuccess = ({
+  open,
+  onClose,
+  mintAddress,
+}: MintCreatedSuccessProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(mintAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const openExplorer = () => {
+    const url = `https://explorer.solana.com/address/${mintAddress}`;
+    window.open(url, '_blank');
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Mint Created!</DialogTitle>
-        </DialogHeader>
-        <div className="font-thin text-sm">
-          <div>
-            <p>Your mint has been successfully created and is now available.</p>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
-          <div className="pt-5 text-gray-600 text-center">
-            <p className="font-semibold">Mint Address</p>
-            <div className="flex items-center gap-1" onClick={copyToClipboard}>
-              <p className="cursor-pointer">{mintAddress}</p>
-              <Copy className="cursor-pointer" width={15} />
-            </div>
+          <DialogTitle className="text-center">
+            Mint Created Successfully
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            Your new token mint has been created on Solana
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="p-4 my-4 bg-gray-50 rounded-lg">
+          <p className="text-sm font-medium text-gray-500 mb-2">
+            Mint Address
+          </p>
+          <div className="break-all text-sm text-gray-900">
+            {mintAddress}
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+
+        <DialogFooter className="flex-col sm:flex-col gap-2">
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={copyToClipboard}
+            >
+              {copied ? (
+                "Copied!"
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Address
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={openExplorer}
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View in Explorer
+            </Button>
+          </div>
+          <Button
+            className="w-full"
+            onClick={onClose}
+          >
+            Continue
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default MintCreatedSuccess;

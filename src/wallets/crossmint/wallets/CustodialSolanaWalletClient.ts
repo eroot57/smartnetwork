@@ -40,6 +40,12 @@ function getLocator(params: CustodialOptions): string {
 }
 
 export class CustodialSolanaWalletClient extends SolanaWalletClient {
+    connect() {
+      throw new Error('Method not implemented.');
+    }
+    publicKey(publicKey: any) {
+      throw new Error('Method not implemented.');
+    }
     #locator: string;
     #client: CrossmintWalletsAPI;
     #address: string;

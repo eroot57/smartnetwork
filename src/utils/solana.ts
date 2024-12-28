@@ -11,6 +11,20 @@ import { getRpcUrl, getEnvironment } from "@/utils/environment";
 
 const currentEnv = getEnvironment();
 
+export interface TokenAccount {
+
+  mint: string;
+
+  amount: number;
+
+  delegated_amount: number;
+
+  frozen: boolean;
+
+  owner: string;
+
+}
+
 export const formatAddress = (address = "") => {
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 };
@@ -55,14 +69,7 @@ export const openExplorerUrl = (address = "", isTxn = false) => {
   );
 };
 
-export type TokenAccount = {
-  address: string;
-  amount: number;
-  delegated_amount: number;
-  frozen: boolean;
-  mint: string;
-  owner: string;
-};
+
 
 export const getAssociatedTokenAddress = ({
   owner,

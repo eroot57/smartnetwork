@@ -6,8 +6,10 @@ import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
 import { WalletContext, WalletContextState } from '../context/walletContext';
-import { MintCreatedModal } from "@/components/modals/MintCreatedSuccess";
+
 import { useWallet } from "@solana/wallet-adapter-react";
+import MintCreatedModal from "@/components/modals/MintCreatedModal";
+
 
 type Props = {
   onSubmit?: () => void;
@@ -26,30 +28,21 @@ const CreateMint = ({ onSubmit }: Props) => {
 
   const handleCreateMint = async () => {
     if (!canSend) return;
+    setIsCreating(true);
     try {
-      setIsCreating(true);
-      const newMint = await createMint();
-      const newMintAddress = newMint.toBase58();
-      setNewMintAddress(newMintAddress);
-      onSubmit?.();
+      const mintAddress = await createMint(decimals, authority);
+      setNewMintAddress(mintAddress.toBase58());
       toast({
-        title: "Success",
-        description: "Mint created successfully",
-        variant: "default",
+        title: "Mint Created",
+        description: `Mint address: ${mintAddress.toBase58()}`,
       });
-    } catch (error: any) {
-      const isInsufficientBalance = error?.message
-        ?.toLowerCase()
-        .includes("not enough balance");
-      
+      if (onSubmit) onSubmit();
+    } catch (error) {
       toast({
-        title: isInsufficientBalance ? "Insufficient balance" : "Error",
-        description: isInsufficientBalance 
-          ? "You do not have enough balance to create mint" 
-          : "An error occurred while creating mint",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create mint",
         variant: "destructive",
       });
-      console.error('Failed to create mint:', error);
     } finally {
       setIsCreating(false);
     }
@@ -118,7 +111,7 @@ const CreateMint = ({ onSubmit }: Props) => {
         </div>
       </div>
       <MintCreatedModal
-        isOpen={!!newMintAddress}
+        open={!!newMintAddress}
         onClose={() => setNewMintAddress(null)}
         mintAddress={newMintAddress || ""}
       />

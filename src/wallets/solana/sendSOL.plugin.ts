@@ -1,17 +1,30 @@
-import { Chain, PluginBase } from "@goat-sdk/core";
-import { createTool } from "@goat-sdk/core";
-import { SystemProgram } from "@solana/web3.js";
-import { PublicKey } from "@solana/web3.js";
+import { Chain, PluginBase, WalletClientBase, createTool } from "@goat-sdk/core";
+import { SystemProgram, PublicKey, Transaction } from "@solana/web3.js";
 import { parseUnits } from "viem";
 import { z } from "zod";
-import { SolanaWalletClient } from "./SolanaWalletClient";
+
+// Extend SolanaWalletClient to implement WalletClientBase
+export interface SolanaWalletClient extends WalletClientBase {
+    getAddress(): string;
+    sendTransaction(params: {
+        instructions: any[];
+        addressLookupTables?: { pubkey: PublicKey }[];
+        accountsToSign?: any[];
+    }): Promise<{ hash: string }>;
+    getCoreTools(): any[];
+}
+
+// Define TransactionResult interface
+interface TransactionResult {
+    hash: string;
+}
 
 export class SendSOLPlugin extends PluginBase<SolanaWalletClient> {
     constructor() {
         super("sendSOL", []);
     }
 
-    supportsChain(chain: Chain) {
+    supportsChain(chain: Chain): boolean {
         return chain.type === "solana";
     }
 
@@ -22,7 +35,10 @@ export class SendSOLPlugin extends PluginBase<SolanaWalletClient> {
                 description: "Send SOL to an address.",
                 parameters: sendSOLParametersSchema,
             },
-            (parameters: z.infer<typeof sendSOLParametersSchema>) => sendSOLMethod(walletClient, parameters),
+            async (parameters: z.infer<typeof sendSOLParametersSchema>) => {
+                const result = await sendSOLMethod(walletClient, parameters);
+                return { hash: result }; // Return object with hash property
+            }
         );
         return [sendTool];
     }
@@ -48,11 +64,13 @@ async function sendSOLMethod(
         const transferInstruction = SystemProgram.transfer({
             fromPubkey: new PublicKey(senderAddress),
             toPubkey: new PublicKey(to),
-            lamports,
+            lamports: BigInt(lamports.toString()),
         });
 
         const txResult = await walletClient.sendTransaction({
             instructions: [transferInstruction],
+            addressLookupTables: [], // Changed from addressLookupTableAddresses
+            accountsToSign: [],
         });
 
         return txResult.hash;
