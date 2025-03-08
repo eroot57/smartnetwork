@@ -5,6 +5,7 @@ import { createMint as createSplMint } from '@solana/spl-token';
 
 // Define context state interface
 export interface WalletContextState {
+  publicKey: PublicKey | null;
   createMint: (decimals: number, authority: string) => Promise<PublicKey>;
   // Add other methods as needed
 }
