@@ -6,10 +6,8 @@ import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
 import { WalletContext, WalletContextState } from '../context/walletContext';
-
 import { useWallet } from "@solana/wallet-adapter-react";
 import MintCreatedModal from "@/components/modals/MintCreatedModal";
-
 
 type Props = {
   onSubmit?: () => void;
@@ -18,7 +16,14 @@ type Props = {
 const CreateMint = ({ onSubmit }: Props) => {
   const { publicKey: connectedWallet } = useWallet();
   const { toast } = useToast();
-  const { createMint } = useContext(WalletContext) as WalletContextState;
+  
+  // Safely use the context with proper error handling
+  const walletContext = useContext(WalletContext);
+  if (!walletContext) {
+    throw new Error("CreateMint must be used within a WalletProvider");
+  }
+  const { createMint } = walletContext;
+  
   const [authority, setAuthority] = useState(connectedWallet?.toBase58() || "");
   const [decimals, setDecimals] = useState<number>(9);
   const [isCreating, setIsCreating] = useState(false);
