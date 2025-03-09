@@ -16,23 +16,22 @@ export class CrossmintFaucetService {
 
     @Tool({
         description: "Top up your USDC balance",
+        parameters: () => TopUpBalanceParameters,
     })
     async topUpUsdc(walletClient: EVMWalletClient, parameters: TopUpBalanceParameters) {
         const wallet = parameters.wallet ?? walletClient.getAddress();
         const resolvedWalletAddress = await walletClient.resolveAddress(wallet);
-
         const network = walletClient.getChain();
-
+        
         if (!network.id) {
             throw new Error("Network ID is required");
         }
-
+        
         const chain = getTestnetChainNameById(network.id);
-
         if (!chain) {
             throw new Error(`Failed to top up balance: Unsupported chain ${network}`);
         }
-
+        
         const options = {
             method: "POST",
             headers: {
@@ -40,23 +39,23 @@ export class CrossmintFaucetService {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                amount: 10,
+                amount: parameters.amount || 10,
                 currency: "usdc",
                 chain,
             }),
         };
-
+        
         console.log("options", options);
-
+        
         const response = await fetch(
             `${this.client.baseUrl}/api/v1-alpha2/wallets/${resolvedWalletAddress}/balances`,
             options,
         );
-
+        
         if (response.ok) {
             return "Balance topped up successfully";
         }
-
+        
         throw new Error(`Failed to top up balance: ${await response.text()}`);
     }
 }
