@@ -14,8 +14,10 @@ export class TopUpBalanceParameters extends createToolParameters(
 export class CrossmintFaucetService {
     constructor(private readonly client: CrossmintApiClient) {}
 
-   
-    async topUpUsdc(walletClient: EVMWalletClient, parameters: TopUpBalanceParameters): Promise<string> {
+    @Tool({
+        description: "Top up your USDC balance",
+    })
+    async topUpUsdc(walletClient: EVMWalletClient, parameters: TopUpBalanceParameters) {
         const wallet = parameters.wallet ?? walletClient.getAddress();
         const resolvedWalletAddress = await walletClient.resolveAddress(wallet);
 

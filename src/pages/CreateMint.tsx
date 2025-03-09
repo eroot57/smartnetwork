@@ -6,8 +6,8 @@ import { PublicKey } from "@solana/web3.js";
 import { Loader } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
 import { WalletContext, WalletContextState } from '../context/walletContext';
+import { MintCreatedModal } from "@/components/modals/MintCreatedSuccess";
 import { useWallet } from "@solana/wallet-adapter-react";
-import MintCreatedModal from "@/components/modals/MintCreatedModal";
 
 type Props = {
   onSubmit?: () => void;
@@ -16,14 +16,7 @@ type Props = {
 const CreateMint = ({ onSubmit }: Props) => {
   const { publicKey: connectedWallet } = useWallet();
   const { toast } = useToast();
-  
-  // Safely use the context with proper error handling
-  const walletContext = useContext(WalletContext);
-  if (!walletContext) {
-    throw new Error("CreateMint must be used within a WalletProvider");
-  }
-  const { createMint } = walletContext;
-  
+  const { createMint } = useContext(WalletContext) as WalletContextState;
   const [authority, setAuthority] = useState(connectedWallet?.toBase58() || "");
   const [decimals, setDecimals] = useState<number>(9);
   const [isCreating, setIsCreating] = useState(false);
@@ -33,21 +26,30 @@ const CreateMint = ({ onSubmit }: Props) => {
 
   const handleCreateMint = async () => {
     if (!canSend) return;
-    setIsCreating(true);
     try {
-      const mintAddress = await createMint(decimals, authority);
-      setNewMintAddress(mintAddress.toBase58());
+      setIsCreating(true);
+      const newMint = await createMint();
+      const newMintAddress = newMint.toBase58();
+      setNewMintAddress(newMintAddress);
+      onSubmit?.();
       toast({
-        title: "Mint Created",
-        description: `Mint address: ${mintAddress.toBase58()}`,
+        title: "Success",
+        description: "Mint created successfully",
+        variant: "default",
       });
-      if (onSubmit) onSubmit();
-    } catch (error) {
+    } catch (error: any) {
+      const isInsufficientBalance = error?.message
+        ?.toLowerCase()
+        .includes("not enough balance");
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create mint",
+        title: isInsufficientBalance ? "Insufficient balance" : "Error",
+        description: isInsufficientBalance 
+          ? "You do not have enough balance to create mint" 
+          : "An error occurred while creating mint",
         variant: "destructive",
       });
+      console.error('Failed to create mint:', error);
     } finally {
       setIsCreating(false);
     }
@@ -116,7 +118,7 @@ const CreateMint = ({ onSubmit }: Props) => {
         </div>
       </div>
       <MintCreatedModal
-        open={!!newMintAddress}
+        isOpen={!!newMintAddress}
         onClose={() => setNewMintAddress(null)}
         mintAddress={newMintAddress || ""}
       />

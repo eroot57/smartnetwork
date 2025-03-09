@@ -1,10 +1,9 @@
 // src/app/layout.tsx
 import { Inter } from 'next/font/google';
 import { config } from '@/config/env';
-import { Providers } from './providers';
-import { Toaster } from '@/components/ui/toaster';
 import '../styles/globals.css';
 
+// Initialize Inter font
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
@@ -31,21 +30,24 @@ export default function RootLayout({ children }: RootLayoutProps) {
         )}
       </head>
       <body className={`${inter.className} antialiased`}>
+        {/* Environment Banner */}
         {isDevelopment && (
           <div className="bg-yellow-400 text-black text-center text-sm py-1">
             Development Environment
           </div>
         )}
 
+        {/* Main Content */}
         <div className="min-h-screen bg-gray-50">
-          <Providers>
-            <main className="max-w-7xl mx-auto">
-              {children}
-            </main>
-          </Providers>
-          <Toaster />
+          <main className="max-w-7xl mx-auto">
+            {children}
+          </main>
+
+          {/* Toast Container for Notifications */}
+          <div id="toast-container" className="fixed bottom-4 right-4 z-50" />
         </div>
 
+        {/* Feature Detection */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

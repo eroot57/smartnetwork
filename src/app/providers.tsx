@@ -1,23 +1,18 @@
-'use client';
-
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { PublicKey, Connection } from '@solana/web3.js';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { BrowserRouter } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { PublicKey } from '@solana/web3.js';
 import { aiAgentService } from '@/lib/ai/agent-service';
 import { crossmintService } from '@/services/crossmint';
 import { heliusService } from '@/services/helius';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Toaster } from '@/components/ui/toaster';
 import type { ReactNode } from 'react';
-import dynamic from 'next/dynamic';
+import { Toaster } from '@/components/ui/toaster';
 
-require('@solana/wallet-adapter-react-ui/styles.css');
+// Update Props type to avoid empty object
+interface ProviderProps {
+  children: ReactNode;
+}
 
-// Context Types
+// Wallet Context
 interface WalletContextType {
   publicKey: PublicKey | null;
   connected: boolean;
@@ -30,18 +25,6 @@ interface WalletContextType {
   error?: string | null;
 }
 
-interface AIContextType {
-  isAnalyzing: boolean;
-  lastAnalysis: {
-    risk?: number;
-    recommendation?: string;
-    details?: string[];
-  } | null;
-  analyzeTransaction: (amount: number, recipient: string) => Promise<void>;
-  getMarketInsights: () => Promise<void>;
-}
-
-// Create Contexts
 const WalletContext = createContext<WalletContextType>({
   publicKey: null,
   connected: false,
@@ -54,6 +37,18 @@ const WalletContext = createContext<WalletContextType>({
   }
 });
 
+// AI Context
+interface AIContextType {
+  isAnalyzing: boolean;
+  lastAnalysis: {
+    risk?: number;
+    recommendation?: string;
+    details?: string[];
+  } | null;
+  analyzeTransaction: (amount: number, recipient: string) => Promise<void>;
+  getMarketInsights: () => Promise<void>;
+}
+
 const AIContext = createContext<AIContextType>({
   isAnalyzing: false,
   lastAnalysis: null,
@@ -61,17 +56,26 @@ const AIContext = createContext<AIContextType>({
   getMarketInsights: async () => {}
 });
 
-interface ProvidersProps {
-  children: ReactNode;
+interface AIAnalysis {
+  type: 'success' | 'warning' | 'error';
+  message: string;
+  analysis: {
+    risk?: number;
+    factors?: string[];
+    suggestion?: string;
+  };
 }
 
-function BaseProviders({ children }: ProvidersProps) {
-  // Solana Connection Setup
-  const network = WalletAdapterNetwork.Devnet;
-  const endpoint = useMemo(() => process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com', []);
-  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
+interface MarketAnalysis {
+  trend: string;
+  analysis: {
+    summary: string;
+    details: string[];
+    recommendations: string[];
+  };
+}
 
-  // Wallet State
+export function Providers({ children }: ProviderProps) {
   const [walletState, setWalletState] = useState<WalletContextType>({
     publicKey: null,
     connected: false,
@@ -84,13 +88,12 @@ function BaseProviders({ children }: ProvidersProps) {
     }
   });
 
-  // AI State
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalysis, setLastAnalysis] = useState<AIContextType['lastAnalysis']>(null);
 
-  // Your existing callbacks
   const updateBalance = useCallback(async () => {
     if (!walletState.publicKey) return;
+
     setWalletState(prev => ({ ...prev, connecting: true }));
     try {
       const balance = await crossmintService.getBalance(walletState.publicKey.toString());
@@ -100,7 +103,7 @@ function BaseProviders({ children }: ProvidersProps) {
         connecting: false,
         error: null
       }));
-    } catch (_error) {
+    } catch (_error) { // Use underscore to indicate unused variable
       setWalletState(prev => ({
         ...prev,
         connecting: false,
@@ -109,64 +112,139 @@ function BaseProviders({ children }: ProvidersProps) {
     }
   }, [walletState.publicKey]);
 
-  // Your other callbacks here...
-  // (keeping your existing implementation for other methods)
+  const disconnectWallet = useCallback(async () => {
+    localStorage.removeItem('walletAddress');
+    setWalletState(prev => ({
+      ...prev,
+      publicKey: null,
+      connected: false,
+      connecting: false
+    }));
+  }, []);
+
+  const selectWallet = useCallback((_walletName: string) => {
+    // Implementation will be added later
+  }, []);
+
+  const createMint = useCallback(async (decimals = 0, authority?: string): Promise<PublicKey> => {
+    if (!walletState.publicKey) {
+      throw new Error('Wallet not connected');
+    }
+    const mint = await crossmintService.createMint({
+      decimals,
+      authority: authority || walletState.publicKey.toString()
+    });
+    return new PublicKey(mint.address);
+  }, [walletState.publicKey]);
+
+  const initializeServices = useCallback(async (publicKey: PublicKey) => {
+    await aiAgentService.initializeAgent({
+      walletState: {
+        address: publicKey.toString(),
+        balance: walletState.balance || '',
+        isLoading: walletState.connecting,
+        error: walletState.error || null,
+        publicKey: null,
+        connected: false,
+        connecting: false
+      }
+    });
+    
+    await heliusService.subscribeToPriceUpdates([publicKey.toString()], updateBalance);
+  }, [walletState.balance, walletState.connecting, walletState.error, updateBalance]);
+
+  const connectWallet = useCallback(async () => {
+    setWalletState(prev => ({ ...prev, connecting: true }));
+    try {
+      const wallet = await crossmintService.createWallet();
+      localStorage.setItem('walletAddress', wallet.address);
+      
+      const publicKey = new PublicKey(wallet.address);
+      setWalletState(prev => ({
+        ...prev,
+        publicKey,
+        connected: true,
+        connecting: false,
+        connect: connectWallet,
+        disconnect: disconnectWallet,
+        select: selectWallet,
+        createMint
+      }));
+
+      await updateBalance();
+      await initializeServices(publicKey);
+    } catch (_error) {
+      setWalletState(prev => ({
+        ...prev,
+        publicKey: null,
+        connected: false,
+        connecting: false,
+        error: 'Failed to connect wallet'
+      }));
+    }
+  }, [createMint, disconnectWallet, selectWallet, updateBalance, initializeServices]);
+
+  const analyzeTransaction = useCallback(async (amount: number, recipient: string) => {
+    setIsAnalyzing(true);
+    try {
+      const analysis = await aiAgentService.analyzeTransaction(amount, recipient, 'Transaction purpose');
+      setLastAnalysis({
+        risk: analysis.analysis?.risk,
+        recommendation: analysis.analysis?.suggestion,
+        details: analysis.analysis?.factors || []
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
+
+  const getMarketInsights = useCallback(async () => {
+    setIsAnalyzing(true);
+    try {
+      const insights = await aiAgentService.getMarketInsights();
+      setLastAnalysis({
+        recommendation: insights.analysis.recommendation,
+        details: insights.analysis.factors || []
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const initializeWallet = async () => {
-        const savedAddress = localStorage.getItem('walletAddress');
-        if (savedAddress) {
-          try {
-            const publicKey = new PublicKey(savedAddress);
-            setWalletState(prev => ({
-              ...prev,
-              publicKey,
-              connected: true
-            }));
-            await updateBalance();
-          } catch (error) {
-            console.error('Failed to reconnect wallet:', error);
-          }
+    const initializeWallet = async () => {
+      const savedAddress = localStorage.getItem('walletAddress');
+      if (savedAddress) {
+        try {
+          await connectWallet();
+        } catch (error) {
+          console.error('Failed to reconnect wallet:', error);
         }
-      };
+      }
+    };
 
-      initializeWallet();
-    }
-  }, [updateBalance]);
+    initializeWallet();
+  }, [connectWallet]);
 
   return (
     <ErrorBoundary>
-      <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <BrowserRouter>
-              <WalletContext.Provider value={walletState}>
-                <AIContext.Provider
-                  value={{
-                    isAnalyzing,
-                    lastAnalysis,
-                    analyzeTransaction: async () => {}, // Implement your methods
-                    getMarketInsights: async () => {}  // Implement your methods
-                  }}
-                >
-                  {children}
-                </AIContext.Provider>
-              </WalletContext.Provider>
-            </BrowserRouter>
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
+      <WalletContext.Provider value={walletState}>
+        <AIContext.Provider
+          value={{
+            isAnalyzing,
+            lastAnalysis,
+            analyzeTransaction,
+            getMarketInsights
+          }}
+        >
+          {children}
+          <Toaster />
+        </AIContext.Provider>
+      </WalletContext.Provider>
     </ErrorBoundary>
   );
 }
 
-// Export a dynamic version of Providers that handles SSR
-export const Providers = dynamic(() => Promise.resolve(BaseProviders), {
-  ssr: false
-}) as React.FC<ProvidersProps>;
-
-// Export hooks
 export const useWallet = () => {
   const context = useContext(WalletContext);
   if (!context) {
