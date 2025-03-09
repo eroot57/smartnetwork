@@ -10,9 +10,7 @@ import {
 export class WalletsService {
     constructor(private client: CrossmintApiClient) {}
 
-    @Tool({
-        description: "Create a new wallet for a Twitter / X user",
-    })
+    
     async createWalletForTwitterUser(parameters: CreateWalletForTwitterUserParameters) {
         try {
             const response = await fetch(`${this.client.baseUrl}/api/v1-alpha2/wallets`, {
@@ -39,9 +37,7 @@ export class WalletsService {
         }
     }
 
-    @Tool({
-        description: "Create a new wallet for an email address",
-    })
+    
     async createWalletForEmail(parameters: CreateWalletForEmailParameters) {
         try {
             const response = await fetch(`${this.client.baseUrl}/api/v1-alpha2/wallets`, {
@@ -68,9 +64,7 @@ export class WalletsService {
         }
     }
 
-    @Tool({
-        description: "Get a wallet by Twitter / X username",
-    })
+    
     async getWalletByTwitterUsername(parameters: GetWalletByTwitterUsernameParameters) {
         try {
             const response = await fetch(
@@ -96,9 +90,7 @@ export class WalletsService {
         }
     }
 
-    @Tool({
-        description: "Get a wallet by email address",
-    })
+    
     async getWalletByEmail(parameters: GetWalletByEmailParameters) {
         try {
             const response = await fetch(
