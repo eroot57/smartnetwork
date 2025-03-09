@@ -11,6 +11,7 @@ import {
   TOKEN_PROGRAM_ID,
   createInitializeMintInstruction
 } from '@solana/spl-token';
+import { createMint as createSplMint } from '@solana/spl-token';
 
 // Define context state interface
 export interface WalletContextState {
