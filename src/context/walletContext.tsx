@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, ReactNode } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey, Keypair } from '@solana/web3.js';
+import { PublicKey, Keypair, Transaction } from '@solana/web3.js';
 import { createMint as createSplMint } from '@solana/spl-token';
 
 // Define context state interface
@@ -40,8 +40,10 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
           connection,
           {
             publicKey: wallet.publicKey,
-            signTransaction: wallet.signTransaction,
-            sendTransaction: wallet.sendTransaction,
+            // Use the correct method signature for Signer
+            signTransaction: async (tx: Transaction) => {
+              return await wallet.signTransaction!(tx);
+            },
           },
           wallet.publicKey, // payer
           authorityPublicKey, // mint authority
@@ -58,6 +60,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   );
 
   const value = {
+    publicKey: wallet.publicKey,  // Make sure to include this
     createMint,
     // Add other methods as needed
   };
