@@ -43,7 +43,7 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@next/eslint-plugin-next": "^15.2.1",
     "@types/moment": "^2.11.29",
     "@types/node": "^20",
     "@types/react": "^19",
