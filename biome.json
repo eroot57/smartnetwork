@@ -5,24 +5,60 @@
   },
   "linter": {
     "enabled": true,
+    "maxDiagnostics": 500,
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "error"
-      },
-      "a11y": {
-        "useKeyWithClickEvents": "error"
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "error"
       },
       "suspicious": {
-        "noExplicitAny": "error"
+        "noExplicitAny": "warn",
+        "noConsoleLog": "warn",
+        "noEmptyInterface": "error"
+      },
+      "style": {
+        "useTemplate": "error",
+        "useConst": "error",
+        "useShorthandArrayType": "error",
+        "noUselessElse": "warn"
+      },
+      "a11y": {
+        "useAltText": "error",
+        "useKeyWithClickEvents": "error",
+        "useValidAnchor": "error"
+      },
+      "nursery": {
+        "useGroupedTypeImport": "off",
+        "noDefaultExport": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "warn"
+      },
+      "performance": {
+        "noDelete": "warn"
       }
-    }
+    },
+    "ignore": [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "public/**",
+      "*.config.js",
+      "*.config.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
-    "indentWidth": 2,
     "indentStyle": "space",
-    "lineWidth": 100
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "ignore": [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "public/**"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -30,5 +66,31 @@
       "trailingComma": "es5",
       "semicolons": "always"
     }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true
+    },
+    "formatter": {
+      "enabled": true,
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 80
+    }
+  },
+  "files": {
+    "ignore": [
+      "node_modules/**",
+      ".git/**",
+      ".next/**",
+      "out/**",
+      "dist/**",
+      "build/**",
+      "public/**",
+      ".vercel/**",
+      "coverage/**",
+      "**/*.min.js"
+    ],
+    "maxSize": 2000000
   }
 }
