@@ -19,7 +19,12 @@ module.exports = {
     "@typescript-eslint/ban-ts-comment": "off",
     "prefer-const": "warn",
     "@next/next/no-img-element": "off",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/ban-types": ["error", {
+      "types": {
+        "{}": false
+      }
+    }]
 
     // Enable strict mode after development
     // "@typescript-eslint/no-explicit-any": "error",
