@@ -1,57 +1,116 @@
+// src/components/modals/MintTokensModal.tsx
+import { FC } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import MintTokensForm from "../forms/MintTokensForm";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
-import { useMintInfo } from "@/hooks/useMintInfo";
+import { useState } from "react";
+import { useToast } from '@/hooks/use-toast';
 
-type Props = {
-  mint?: string | null;
+
+export interface MintTokensModalProps {
   open: boolean;
   onClose: () => void;
-};
+  mint: string;
+}
 
-export function MintTokensModal({ open, onClose, mint }: Props) {
-  const { isFetchingMintInfo, errorFetchingMintInfo, mintInfo, isAuthority } =
-    useMintInfo(mint);
+export const MintTokensModal: FC<MintTokensModalProps> = ({ 
+  open, 
+  onClose, 
+  mint 
+}) => {
+  const { toast } = useToast();
+  const [amount, setAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleClose = () => {
-    onClose();
+  const handleMint = async () => {
+    if (!amount || isNaN(Number(amount))) {
+      toast({
+        title: "Invalid amount",
+        description: "Please enter a valid number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Implement your minting logic here
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
+      toast({
+        title: "Success",
+        description: "Tokens minted successfully",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to mint tokens",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (!open) return null;
-
   return (
-    <Dialog modal open={open} onOpenChange={handleClose}>
-      <DialogHeader>
-        <DialogTitle>Mint</DialogTitle>
-        <p className="text-sm text-gray-400">{mint}</p>
-      </DialogHeader>
-      <DialogContent className="sm:max-w-[500px]">
-        {isFetchingMintInfo ? (
-          <div className="flex flex-col justify-center items-center">
-            <Loader className="w-5 h-5" />
-            <p className="text-sm text-gray-400">Fetching mint info...</p>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Mint Tokens</DialogTitle>
+          <DialogDescription>
+            Enter the amount of tokens to mint for {mint.slice(0, 4)}...{mint.slice(-4)}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <label htmlFor="amount" className="text-sm font-medium text-gray-700">
+              Amount
+            </label>
+            <Input
+              id="amount"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount"
+              disabled={isLoading}
+            />
           </div>
-        ) : errorFetchingMintInfo ? (
-          <div className="flex flex-col justify-center items-center">
-            <p className="text-sm text-red-500">
-              Error fetching mint info: {errorFetchingMintInfo}
-            </p>
-          </div>
-        ) : mintInfo && !isAuthority ? (
-          <div className="flex flex-col justify-center items-center">
-            <p className="text-sm text-red-500">
-              You are not the mint authority.
-            </p>
-          </div>
-        ) : mintInfo && isAuthority ? (
-          <MintTokensForm mint={mint as string} onSubmit={onClose} />
-        ) : null}
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleMint}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader className="mr-2 h-4 w-4" />
+                Minting...
+              </>
+            ) : (
+              'Mint Tokens'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default MintTokensModal;

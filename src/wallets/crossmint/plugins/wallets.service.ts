@@ -64,7 +64,7 @@ export class WalletsService {
         }
     }
 
-    
+   
     async getWalletByTwitterUsername(parameters: GetWalletByTwitterUsernameParameters) {
         try {
             const response = await fetch(

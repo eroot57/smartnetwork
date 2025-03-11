@@ -1,31 +1,33 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import ReclaimForm from "../forms/ReclaimForm";
+import { FC } from 'react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { TokenAccount } from "@/utils/solana";
 
-type Props = {
-  tokenAccount?: TokenAccount | null;
+export interface ReclaimModalProps {
   open: boolean;
   onClose: () => void;
-};
+  tokenAccount: TokenAccount;
+}
 
-export function ReclaimModal({ open, onClose, tokenAccount }: Props) {
-
+const ReclaimModal: FC<ReclaimModalProps> = ({ open, onClose, tokenAccount }) => {
   return (
-    <Dialog modal open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Reclaim</DialogTitle>
-          <p className="text-sm text-gray-400">{tokenAccount?.mint}</p>
-          {tokenAccount && (
-            <ReclaimForm tokenAccount={tokenAccount} onSubmit={onClose} />
-          )}
+          <DialogTitle>Reclaim Rent</DialogTitle>
         </DialogHeader>
+        <div>
+          <p>Token Mint: {tokenAccount.mint}</p>
+          <p>Amount: {tokenAccount.amount}</p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default ReclaimModal;

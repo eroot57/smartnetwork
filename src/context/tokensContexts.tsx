@@ -7,6 +7,8 @@ export type CompressedTokenInfo = {
   compressed: boolean;
 };
 
+export type { TokenAccount };
+
 interface TokenContextType {
   solBalance: number;
   splTokenAccounts: TokenAccount[];
@@ -21,7 +23,7 @@ const TokenContext = createContext<TokenContextType | undefined>(undefined);
 export const useTokens = () => {
   const context = useContext(TokenContext);
   if (!context) {
-    throw new Error("useTokens must be used within a Token");
+    throw new Error("useTokens must be used within a TokenProvider");
   }
   return context;
 };
