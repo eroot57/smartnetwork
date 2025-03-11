@@ -63,7 +63,7 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "javascript.formatter.trailingCommas": "es5",
+      "trailingCommas": "es5",
       "semicolons": "always"
     }
   },
