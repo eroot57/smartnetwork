@@ -29,7 +29,8 @@ class APIService {
 
   private constructor() {
     this.config = {
-      baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'https://staging.crossmint.com/api/v1-alpha2',
+      baseURL:
+        process.env.NEXT_PUBLIC_API_BASE_URL || 'https://staging.crossmint.com/api/v1-alpha2',
       apiKey: process.env.NEXT_PUBLIC_CROSSMINT_API_KEY || '',
       timeout: 30000, // 30 seconds default timeout
     };
@@ -106,11 +107,7 @@ class APIService {
       errorData = { message: 'Unknown error occurred' };
     }
 
-    return ErrorHandler.createError(
-      response.status,
-      errorData.message,
-      errorData.code
-    );
+    return ErrorHandler.createError(response.status, errorData.message, errorData.code);
   }
 
   private handleRequestError(error: any): Error {
@@ -217,7 +214,7 @@ class APIService {
   }
 
   // Jupiter DEX API integration
-  public async getSwapQuote(inputMint: string, outputMint: string, amount: number) {
+  public async getSwapQuote(_inputMint: string, _outputMint: string, _amount: number) {
     return this.request({
       method: 'GET',
       path: '/swap/quote',

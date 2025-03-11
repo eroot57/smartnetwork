@@ -1,5 +1,4 @@
-import { NavLink } from "react-router-dom";
-import ConnectWalletButton from "@/components/ConnectWalletButton";
+import ConnectWalletButton from '@/components/ConnectWalletButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,15 +6,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
+import { NavLink } from 'react-router-dom';
 
 const Link = ({ to, label }: { to: string; label: string }) => {
   return (
     <NavLink
       className={({ isActive }) =>
         isActive
-          ? "h-11 px-2 text-lg flex items-center font-semibold rounded-sm font-light"
-          : "h-11 px-2 text-lg flex items-center bg-transparent hover:font-normal rounded-sm font-thin"
+          ? 'h-11 px-2 text-lg flex items-center font-semibold rounded-sm font-light'
+          : 'h-11 px-2 text-lg flex items-center bg-transparent hover:font-normal rounded-sm font-thin'
       }
       to={to}
     >
@@ -25,18 +25,16 @@ const Link = ({ to, label }: { to: string; label: string }) => {
 };
 
 enum Environment {
-  LOCAL = "local",
-  DEVNET = "devnet",
-  MAINNET = "mainnet",
+  LOCAL = 'local',
+  DEVNET = 'devnet',
+  MAINNET = 'mainnet',
 }
 
-const setEnvironment = (env: Environment) => {
-  console.log(`Environment set to ${env}`);
-};
+const setEnvironment = (_env: Environment) => {};
 
 const NetworkSelect = () => {
-  const environment = "mainnet"; // Replace with actual environment fetching logic
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const environment = 'mainnet'; // Replace with actual environment fetching logic
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
     <DropdownMenu>

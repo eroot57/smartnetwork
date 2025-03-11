@@ -1,9 +1,19 @@
-import { createContext, useContext, useEffect, useMemo, useState, PropsWithChildren } from 'react';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { CrossmintApiClient } from "@crossmint/common-sdk-base";
-import { CrossmintWalletsAPI } from '@/wallets/crossmint/wallets/CrossmintWalletsAPI';
-import { CustodialSolanaWalletClient, custodialFactory } from '@/wallets/crossmint/wallets/CustodialSolanaWalletClient';
 import { useToast } from '@/hooks/use-toast';
+import { CrossmintWalletsAPI } from '@/wallets/crossmint/wallets/CrossmintWalletsAPI';
+import {
+  type CustodialSolanaWalletClient,
+  custodialFactory,
+} from '@/wallets/crossmint/wallets/CustodialSolanaWalletClient';
+import { CrossmintApiClient } from '@crossmint/common-sdk-base';
+import { Connection, PublicKey } from '@solana/web3.js';
+import {
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 type SupportedChain = 'solana';
 
@@ -31,19 +41,20 @@ export function WalletProvider({ children }: PropsWithChildren) {
 
   // Initialize Solana connection and Crossmint client
   const { connection, crossmintClient } = useMemo(() => {
-    const connection = new Connection(
-      process.env.NEXT_PUBLIC_SOLANA_RPC_HOST!,
-      { commitment: 'confirmed' }
-    );
+    const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_HOST!, {
+      commitment: 'confirmed',
+    });
 
     const crossmintClient = new CrossmintApiClient(
       { apiKey: process.env.NEXT_PUBLIC_CROSSMINT_API_KEY! },
-      { internalConfig: {
-        sdkMetadata: {
-          name: '',
-          version: ''
-        }
-      } }
+      {
+        internalConfig: {
+          sdkMetadata: {
+            name: '',
+            version: '',
+          },
+        },
+      }
     );
 
     return { connection, crossmintClient };
@@ -52,14 +63,14 @@ export function WalletProvider({ children }: PropsWithChildren) {
   // Initialize wallet clients
   const initializeWallet = useMemo(async () => {
     const createCustodialWallet = custodialFactory(crossmintClient);
-    
+
     try {
       const wallet = await createCustodialWallet({
         chain: 'solana',
         connection,
-        email: process.env.NEXT_PUBLIC_WALLET_EMAIL || '' // Or however you want to identify the wallet
+        email: process.env.NEXT_PUBLIC_WALLET_EMAIL || '', // Or however you want to identify the wallet
       });
-      
+
       return wallet;
     } catch (error) {
       console.error('Failed to initialize wallet:', error);
@@ -74,7 +85,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
     try {
       setConnecting(true);
       const wallet = await initializeWallet;
-      
+
       if (!wallet) {
         throw new Error('Failed to initialize wallet');
       }
@@ -139,11 +150,7 @@ export function WalletProvider({ children }: PropsWithChildren) {
     walletClient: currentWallet,
   };
 
-  return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
-  );
+  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 }
 
 export const useWallet = () => {

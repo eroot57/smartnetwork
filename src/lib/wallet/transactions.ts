@@ -1,10 +1,10 @@
+import { WALLET_CONSTANTS } from '@/config/constants';
+import { TRANSACTION_CONSTANTS } from '@/lib/utils/constants';
+import { ErrorHandler } from '@/lib/utils/error-handling';
+import { WalletError } from '@/lib/utils/error-handling';
+import { formatUtils } from '@/lib/utils/format';
 // src/lib/wallet/transactions.ts
 import { apiService } from '@/services/api';
-import { ErrorHandler } from '@/lib/utils/error-handling';
-import { WALLET_CONSTANTS } from '@/config/constants';
-import { formatUtils } from '@/lib/utils/format';
-import { WalletError } from '@/lib/utils/error-handling';
-import {TRANSACTION_CONSTANTS} from '@/lib/utils/constants';
 interface TransactionOptions {
   slippage?: number;
   priority?: 'low' | 'medium' | 'high';
@@ -93,8 +93,8 @@ export class TransactionManager {
           amount: amount.toString(),
           slippage: options.slippage || WALLET_CONSTANTS.TRANSACTION.DEFAULT_SLIPPAGE,
           priorityFee,
-          memo: options.memo
-        }
+          memo: options.memo,
+        },
       });
 
       this.monitorTransaction(response.data.signature);
@@ -103,9 +103,9 @@ export class TransactionManager {
         signature: response.data.signature,
         timestamp: Date.now(),
         fee: response.data.fee,
-        status: 'pending'
+        status: 'pending',
       };
-    } catch (error) {
+    } catch (_error) {
       throw ErrorHandler.createError(500, 'TRANSACTION_FAILED', 'Failed to send transaction');
     }
   }
@@ -122,31 +122,37 @@ export class TransactionManager {
     try {
       const response = await apiService.sendRequest<BalanceResponse>({
         method: 'GET',
-        path: `/wallets/${this.wallet}/balance`
+        path: `/wallets/${this.wallet}/balance`,
       });
 
-      if (parseFloat(response.data.amount) < amount) {
-        throw ErrorHandler.createError(402, 'INSUFFICIENT_BALANCE', 'Insufficient balance for transaction');
+      if (Number.parseFloat(response.data.amount) < amount) {
+        throw ErrorHandler.createError(
+          402,
+          'INSUFFICIENT_BALANCE',
+          'Insufficient balance for transaction'
+        );
       }
-    } catch (error) {
+    } catch (_error) {
       throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to check balance');
     }
   }
 
-  private async calculatePriorityFee(priority: TransactionOptions['priority'] = 'medium'): Promise<number> {
+  private async calculatePriorityFee(
+    priority: TransactionOptions['priority'] = 'medium'
+  ): Promise<number> {
     try {
       const response = await apiService.sendRequest<FeeResponse>({
         method: 'GET',
-        path: '/fees/estimate'
+        path: '/fees/estimate',
       });
 
       const multipliers = {
         low: 1,
         medium: 1.5,
-        high: 2
+        high: 2,
       };
       return response.data.estimatedFee * multipliers[priority];
-    } catch (error) {
+    } catch (_error) {
       return 5000; // Fallback value if constant is missing
     }
   }
@@ -154,7 +160,7 @@ export class TransactionManager {
   private monitorTransaction(signature: string): void {
     this.pendingTransactions.set(signature, {
       status: 'pending',
-      confirmations: 0
+      confirmations: 0,
     });
 
     const interval = setInterval(async () => {
@@ -189,15 +195,15 @@ export class TransactionManager {
     try {
       const response = await apiService.sendRequest<TransactionResponse>({
         method: 'GET',
-        path: `/transactions/${signature}`
+        path: `/transactions/${signature}`,
       });
 
       return {
         status: response.data.status,
         confirmations: 1,
-        signature
+        signature,
       };
-    } catch (error) {
+    } catch (_error) {
       throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to check transaction status');
     }
   }
@@ -207,16 +213,16 @@ export class TransactionManager {
       const response = await apiService.sendRequest<TransactionHistoryResponse>({
         method: 'GET',
         path: `/wallets/${this.wallet}/transactions`,
-        body: { limit }
+        body: { limit },
       });
 
       return response.data.transactions.map((tx: TransactionMapItem) => ({
         signature: tx.signature,
         timestamp: tx.timestamp,
         fee: tx.fee,
-        status: tx.status
+        status: tx.status,
       }));
-    } catch (error) {
+    } catch (_error) {
       throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to fetch transaction history');
     }
   }

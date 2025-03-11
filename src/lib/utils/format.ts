@@ -1,7 +1,7 @@
 export const formatUtils = {
   // Format SOL amount with appropriate decimals
-  formatSOL: (amount: number | string, decimals: number = 4): string => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  formatSOL: (amount: number | string, decimals = 4): string => {
+    const num = typeof amount === 'string' ? Number.parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: decimals,
@@ -10,7 +10,7 @@ export const formatUtils = {
 
   // Format USD amount
   formatUSD: (amount: number | string): string => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const num = typeof amount === 'string' ? Number.parseFloat(amount) : amount;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -18,7 +18,7 @@ export const formatUtils = {
   },
 
   // Format wallet address with ellipsis
-  formatAddress: (address: string, startLength: number = 4, endLength: number = 4): string => {
+  formatAddress: (address: string, startLength = 4, endLength = 4): string => {
     if (!address) return '';
     if (address.length <= startLength + endLength) return address;
     return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
@@ -37,7 +37,7 @@ export const formatUtils = {
   },
 
   // Format percentage change
-  formatPercentage: (value: number, includeSign: boolean = true): string => {
+  formatPercentage: (value: number, includeSign = true): string => {
     const formatted = Math.abs(value).toFixed(2);
     if (includeSign) {
       return value > 0 ? `+${formatted}%` : `${value < 0 ? '-' : ''}${formatted}%`;
@@ -49,7 +49,7 @@ export const formatUtils = {
   formatLargeNumber: (num: number): string => {
     const suffixes = ['', 'K', 'M', 'B', 'T'];
     const magnitude = Math.floor(Math.log10(Math.abs(num)) / 3);
-    const scaledNum = num / Math.pow(10, magnitude * 3);
+    const scaledNum = num / 10 ** (magnitude * 3);
     const suffix = suffixes[magnitude];
     return `${scaledNum.toFixed(2)}${suffix}`;
   },
@@ -71,10 +71,7 @@ export const formatUtils = {
   },
 
   // Format number with appropriate decimals
-  formatNumber: (amount: number, decimals: number = 2): string => {
+  formatNumber: (amount: number, decimals = 2): string => {
     return amount.toFixed(decimals);
   },
 };
-
-
-

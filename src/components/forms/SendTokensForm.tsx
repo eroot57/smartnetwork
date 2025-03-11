@@ -1,11 +1,11 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { PublicKey } from "@solana/web3.js";
-import { Loader } from "@/components/ui/loader";
-import { useToast } from "@/hooks/use-toast";
-import { WalletAI } from "@/lib/ai/agent";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader } from '@/components/ui/loader';
+import { useToast } from '@/hooks/use-toast';
+import { WalletAI } from '@/lib/ai/agent';
+import { PublicKey } from '@solana/web3.js';
+import { useState } from 'react';
 
 type Props = {
   mint: string;
@@ -13,8 +13,8 @@ type Props = {
 };
 
 const SendTokensForm = ({ mint, onSubmit }: Props) => {
-  const [amount, setAmount] = useState<string | number>("");
-  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState<string | number>('');
+  const [recipient, setRecipient] = useState('');
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
 
@@ -25,35 +25,32 @@ const SendTokensForm = ({ mint, onSubmit }: Props) => {
     try {
       setIsSending(true);
       const response = await WalletAI.evaluateTransaction(recipient, Number(amount), mint);
-      if (response.type === "success") {
+      if (response.type === 'success') {
         toast({
-          title: "Tokens sent",
+          title: 'Tokens sent',
           description: response.message,
         });
         onSubmit();
       } else {
         toast({
-          title: "Transaction Warning",
+          title: 'Transaction Warning',
           description: response.message,
-          variant: "default",
+          variant: 'default',
         });
       }
     } catch (error: any) {
-      const isInsufficientBalance = error?.message
-        ?.toLowerCase()
-        .includes("not enough balance");
+      const isInsufficientBalance = error?.message?.toLowerCase().includes('not enough balance');
       if (isInsufficientBalance) {
-        console.log("Insufficient balance");
         toast({
-          title: "Insufficient balance",
-          description: "You do not have enough balance to send tokens",
-          variant: "destructive",
+          title: 'Insufficient balance',
+          description: 'You do not have enough balance to send tokens',
+          variant: 'destructive',
         });
       } else {
         toast({
-          title: "Error",
-          description: "An error occurred while sending tokens",
-          variant: "destructive",
+          title: 'Error',
+          description: 'An error occurred while sending tokens',
+          variant: 'destructive',
         });
       }
     } finally {
@@ -75,7 +72,7 @@ const SendTokensForm = ({ mint, onSubmit }: Props) => {
               if (Number(e.target.value) > 0) {
                 setAmount(Number(e.target.value));
               } else {
-                setAmount("");
+                setAmount('');
               }
             }}
           />

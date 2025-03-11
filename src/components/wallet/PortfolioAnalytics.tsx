@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
 //import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 //import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts/umd/Recharts';
-import { TrendingUp, DollarSign, Percent, Clock } from 'lucide-react';
+import { Clock, DollarSign, Percent, TrendingUp } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { ResponsiveContainer, XAxis, YAxis, Tooltip, Area, Line, AreaChart, LineChart } from 'recharts';
 
 interface PortfolioData {
   timestamp: number;
@@ -62,26 +72,26 @@ export function PortfolioAnalytics() {
         label: 'Total Value',
         value: `$${latest.totalValue.toFixed(2)}`,
         change: percentChange,
-        icon: <DollarSign className="w-5 h-5" />
+        icon: <DollarSign className="w-5 h-5" />,
       },
       {
         label: 'SOL Holdings',
         value: `$${latest.solValue.toFixed(2)}`,
         change: ((latest.solValue - earliest.solValue) / earliest.solValue) * 100,
-        icon: <TrendingUp className="w-5 h-5" />
+        icon: <TrendingUp className="w-5 h-5" />,
       },
       {
         label: 'Token Value',
         value: `$${latest.tokenValue.toFixed(2)}`,
         change: ((latest.tokenValue - earliest.tokenValue) / earliest.tokenValue) * 100,
-        icon: <Percent className="w-5 h-5" />
+        icon: <Percent className="w-5 h-5" />,
       },
       {
         label: 'NFT Value',
         value: `$${latest.nftValue.toFixed(2)}`,
         change: ((latest.nftValue - earliest.nftValue) / earliest.nftValue) * 100,
-        icon: <Clock className="w-5 h-5" />
-      }
+        icon: <Clock className="w-5 h-5" />,
+      },
     ];
 
     setMetrics(newMetrics);
@@ -124,17 +134,16 @@ export function PortfolioAnalytics() {
               className="p-4 border rounded-lg bg-white hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-full bg-blue-50">
-                  {metric.icon}
-                </div>
+                <div className="p-2 rounded-full bg-blue-50">{metric.icon}</div>
                 <span className="text-sm text-gray-600">{metric.label}</span>
               </div>
               <div className="flex items-baseline justify-between">
                 <span className="text-2xl font-bold">{metric.value}</span>
-                <span className={`text-sm ${
-                  metric.change >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}>
-                  {metric.change >= 0 ? '+' : ''}{metric.change.toFixed(2)}%
+                <span
+                  className={`text-sm ${metric.change >= 0 ? 'text-green-500' : 'text-red-500'}`}
+                >
+                  {metric.change >= 0 ? '+' : ''}
+                  {metric.change.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -146,18 +155,19 @@ export function PortfolioAnalytics() {
             <AreaChart data={portfolioData}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis
-                dataKey="timestamp"
-                tickFormatter={formatDate}
-                stroke="#94A3B8"
-              />
+              <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#94A3B8" />
               <YAxis stroke="#94A3B8" />
               <Tooltip
-                contentStyle={{ background: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                contentStyle={{
+                  background: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
                 labelFormatter={formatDate}
               />
               <Area
@@ -174,14 +184,15 @@ export function PortfolioAnalytics() {
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={portfolioData}>
-              <XAxis
-                dataKey="timestamp"
-                tickFormatter={formatDate}
-                stroke="#94A3B8"
-              />
+              <XAxis dataKey="timestamp" tickFormatter={formatDate} stroke="#94A3B8" />
               <YAxis stroke="#94A3B8" />
               <Tooltip
-                contentStyle={{ background: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                contentStyle={{
+                  background: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                }}
                 labelFormatter={formatDate}
               />
               <Line

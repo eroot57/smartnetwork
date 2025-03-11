@@ -1,2 +1,2 @@
-export * from "./faucet.plugin";
-export * from "./mint.plugin";
+export * from './faucet.plugin';
+export * from './mint.plugin';

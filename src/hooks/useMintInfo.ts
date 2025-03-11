@@ -1,8 +1,8 @@
-// src/hooks/useMintInfo.ts
-import { useState, useEffect, useCallback } from 'react';
-import { PublicKey } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
+// src/hooks/useMintInfo.ts
+import { useCallback, useEffect, useState } from 'react';
 import { useMemo } from 'react';
 
 interface MintInfo {
@@ -16,7 +16,7 @@ interface MintInfo {
 export const useMintInfo = (mintAddress?: string) => {
   const { connection } = useConnection();
   const { publicKey: walletPublicKey } = useWallet();
-  
+
   const [mintInfo, setMintInfo] = useState<MintInfo | null>(null);
   const [isFetchingMintInfo, setIsFetchingMintInfo] = useState(false);
   const [errorFetchingMintInfo, setErrorFetchingMintInfo] = useState<string | null>(null);
@@ -50,18 +50,20 @@ export const useMintInfo = (mintAddress?: string) => {
         throw new Error('Not a mint account');
       }
 
-      const mintAuthority = parsed.info.mintAuthority ? 
-        new PublicKey(parsed.info.mintAuthority) : null;
+      const mintAuthority = parsed.info.mintAuthority
+        ? new PublicKey(parsed.info.mintAuthority)
+        : null;
 
-      const freezeAuthority = parsed.info.freezeAuthority ? 
-        new PublicKey(parsed.info.freezeAuthority) : null;
+      const freezeAuthority = parsed.info.freezeAuthority
+        ? new PublicKey(parsed.info.freezeAuthority)
+        : null;
 
       setMintInfo({
         address: mintPubkey,
         decimals: parsed.info.decimals,
         supply: BigInt(parsed.info.supply),
         mintAuthority,
-        freezeAuthority
+        freezeAuthority,
       });
     } catch (error) {
       console.error('Error fetching mint info:', error);
@@ -88,6 +90,6 @@ export const useMintInfo = (mintAddress?: string) => {
     isFetchingMintInfo,
     errorFetchingMintInfo,
     isAuthority,
-    refreshMintInfo
+    refreshMintInfo,
   };
 };

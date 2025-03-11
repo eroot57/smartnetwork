@@ -1,7 +1,7 @@
-// src/hooks/useTransactions.ts
-import { useState, useEffect, useCallback } from 'react';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
+import { type ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
+// src/hooks/useTransactions.ts
+import { useCallback, useEffect, useState } from 'react';
 
 interface TransactionInfo {
   signature: string;
@@ -46,19 +46,17 @@ export const useTransactions = (walletAddress: string) => {
 
     try {
       // Fetch recent signatures
-      const signatures = await connection.getSignaturesForAddress(
-        new PublicKey(walletAddress),
-        { limit: 50 }
-      );
+      const signatures = await connection.getSignaturesForAddress(new PublicKey(walletAddress), {
+        limit: 50,
+      });
 
       // Fetch transaction details
       const parsedTransactions = await Promise.all(
         signatures.map(async (sigInfo) => {
           try {
-            const tx = await connection.getParsedTransaction(
-              sigInfo.signature,
-              { maxSupportedTransactionVersion: 0 }
-            );
+            const tx = await connection.getParsedTransaction(sigInfo.signature, {
+              maxSupportedTransactionVersion: 0,
+            });
             return tx ? parseTransaction(tx) : null;
           } catch (err) {
             console.error('Error fetching transaction:', err);
@@ -94,6 +92,6 @@ export const useTransactions = (walletAddress: string) => {
     transactions,
     isLoading,
     error,
-    refetch
+    refetch,
   };
 };

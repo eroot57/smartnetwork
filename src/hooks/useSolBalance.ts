@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { useTokens } from "@/context/tokensContexts";
-import { getSolBalance } from "@/utils/solana";
+import { useTokens } from '@/context/tokensContexts';
+import { getSolBalance } from '@/utils/solana';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Token = {
   name: string;
@@ -25,14 +25,14 @@ export const useSolBalance = (): UseSolBalanceHook => {
   const { connection } = useConnection();
   const { solBalance, setSolBalance } = useTokens();
   const hasFetchedRef = useRef(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isFetching, _setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tokens, setTokens] = useState<Token[]>([]); // Add tokens state
+  const [tokens, _setTokens] = useState<Token[]>([]); // Add tokens state
   const [loading, setLoading] = useState(false); // Add loading state
 
   const fetchWalletSolBalance = useCallback(async () => {
     if (!connectedWallet) {
-      setError("Wallet not connected");
+      setError('Wallet not connected');
       return;
     }
 
@@ -43,8 +43,8 @@ export const useSolBalance = (): UseSolBalanceHook => {
       const balance = await getSolBalance(connection, connectedWallet);
       setSolBalance(balance);
       // Fetch tokens here if needed and setTokens
-    } catch (err) {
-      setError("Failed to fetch balance");
+    } catch (_err) {
+      setError('Failed to fetch balance');
     } finally {
       setLoading(false);
     }

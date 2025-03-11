@@ -1,26 +1,20 @@
-import { createRpc as createLightRpc } from "@lightprotocol/stateless.js";
+import { getRpcUrl } from '@/utils/environment';
+import { AnchorProvider, Program } from '@coral-xyz/anchor';
+import { IDL } from '@lightprotocol/compressed-token';
+import { createRpc as createLightRpc } from '@lightprotocol/stateless.js';
+import { ExtensionType, LENGTH_SIZE, MINT_SIZE, TYPE_SIZE, getMintLen } from '@solana/spl-token';
+import { getMint } from '@solana/spl-token';
+import { type TokenMetadata, pack } from '@solana/spl-token-metadata';
 import {
   ComputeBudgetProgram,
-  TransactionInstruction,
-  TransactionMessage,
-  VersionedTransaction,
+  Connection,
   PublicKey,
   // AddressLookupTableAccount,
-  Signer,
-  Connection,
-} from "@solana/web3.js";
-import {
-  TYPE_SIZE,
-  LENGTH_SIZE,
-  ExtensionType,
-  getMintLen,
-  MINT_SIZE,
-} from "@solana/spl-token";
-import { pack, TokenMetadata } from "@solana/spl-token-metadata";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { IDL } from "@lightprotocol/compressed-token";
-import { getRpcUrl } from "@/utils/environment";
-import { getMint } from "@solana/spl-token";
+  type Signer,
+  type TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from '@solana/web3.js';
 
 export const ZK_NETWORK_RPC_TESTNET = getRpcUrl();
 export const PHOTON_RPC_ENDPOINT_TESTNET = getRpcUrl();
@@ -28,10 +22,10 @@ export const PHOTON_RPC_ENDPOINT_TESTNET = getRpcUrl();
 export const DEFAULT_PRIORITY_FEE = 1_000_000;
 
 export const COMPRESSED_TOKEN_PROGRAM_ID = new PublicKey(
-  "cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m"
+  'cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m'
 );
-export const CPI_AUTHORITY_SEED = Buffer.from("cpi_authority");
-export const POOL_SEED = Buffer.from("pool");
+export const CPI_AUTHORITY_SEED = Buffer.from('cpi_authority');
+export const POOL_SEED = Buffer.from('pool');
 
 export type CompressedTokenDetails = {
   account: {
@@ -103,18 +97,14 @@ export const getMintRentExemption = async (metaData?: TokenMetadata) => {
     dataLength += metadataExtension + metadataLen + mintLen;
   }
 
-  const rentExemptBalance =
-    await lightRpc.getMinimumBalanceForRentExemption(dataLength);
+  const rentExemptBalance = await lightRpc.getMinimumBalanceForRentExemption(dataLength);
   return rentExemptBalance;
 };
 
 export const deriveTokenPoolPda = (mint: PublicKey): PublicKey => {
-  const POOL_SEED = Buffer.from("pool");
+  const POOL_SEED = Buffer.from('pool');
   const seeds = [POOL_SEED, mint.toBuffer()];
-  const [address, _] = PublicKey.findProgramAddressSync(
-    seeds,
-    COMPRESSED_TOKEN_PROGRAM_ID
-  );
+  const [address, _] = PublicKey.findProgramAddressSync(seeds, COMPRESSED_TOKEN_PROGRAM_ID);
   return address;
 };
 
@@ -130,7 +120,7 @@ export const getCompressedMintProgam = (connectedWallet: PublicKey) => {
   const lightRpc = new Connection(getRpcUrl());
   // @ts-ignore
   const provider = new AnchorProvider(lightRpc, connectedWallet, {
-    commitment: "confirmed",
+    commitment: 'confirmed',
   });
   // @ts-ignore
   return new Program(IDL, COMPRESSED_TOKEN_PROGRAM_ID, provider);
@@ -143,17 +133,17 @@ export const getCompressedMintInfo = async ({
   // owner: PublicKey;
   mint: PublicKey;
 }): Promise<CompressedTokenDetails> => {
-  const lightRpcInstance = getLightRpc();
+  const _lightRpcInstance = getLightRpc();
   // fetch compressed account from helius
   const compressedAccountResponse = await fetch(getRpcUrl(), {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: "get-compressed-account",
-      method: "getCompressedAccount",
+      jsonrpc: '2.0',
+      id: 'get-compressed-account',
+      method: 'getCompressedAccount',
       params: {
         address: mint?.toBase58(),
       },
@@ -191,27 +181,27 @@ export const getCompressedMintInfo = async ({
 
 export const fetCompressedTokenBalances = async (wallet: PublicKey, mint?: string) => {
   const response = await fetch(getRpcUrl(), {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      jsonrpc: "2.0",
-      id: "compressed-token-balances",
-      method: "getCompressedTokenBalancesByOwner",
+      jsonrpc: '2.0',
+      id: 'compressed-token-balances',
+      method: 'getCompressedTokenBalancesByOwner',
       params: {
         owner: wallet.toBase58(),
-        mint: mint || null
+        mint: mint || null,
       },
     }),
   });
 
   if (response.status === 429) {
-    throw new Error("Too many requests. Try again in a few seconds.");
+    throw new Error('Too many requests. Try again in a few seconds.');
   }
 
   if (!response.ok) {
-    throw new Error("Failed to fetch compressed token balances");
+    throw new Error('Failed to fetch compressed token balances');
   }
 
   const data = await response.json();
@@ -240,8 +230,6 @@ export const fetCompressedTokenBalances = async (wallet: PublicKey, mint?: strin
 };
 
 export const fetchCompressedSignatures = async (wallet: PublicKey) => {
-  const lightRpc = new Connection(getRpcUrl());
-  const compressedSignatures =
-    await getLightRpc().getCompressionSignaturesForOwner(wallet);
-  console.log("compressedSignatures", compressedSignatures);
+  const _lightRpc = new Connection(getRpcUrl());
+  const _compressedSignatures = await getLightRpc().getCompressionSignaturesForOwner(wallet);
 };

@@ -1,6 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
 import { Github, Twitter } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -63,7 +63,9 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/docs">
-                  <a className="text-sm text-muted-foreground hover:text-foreground">Documentation</a>
+                  <a className="text-sm text-muted-foreground hover:text-foreground">
+                    Documentation
+                  </a>
                 </Link>
               </li>
               <li>
@@ -85,12 +87,16 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link href="/privacy">
-                  <a className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</a>
+                  <a className="text-sm text-muted-foreground hover:text-foreground">
+                    Privacy Policy
+                  </a>
                 </Link>
               </li>
               <li>
                 <Link href="/terms">
-                  <a className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</a>
+                  <a className="text-sm text-muted-foreground hover:text-foreground">
+                    Terms of Service
+                  </a>
                 </Link>
               </li>
             </ul>

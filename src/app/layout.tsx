@@ -1,8 +1,8 @@
+import { Toaster } from '@/components/ui/toaster';
+import { config } from '@/config/env';
 // src/app/layout.tsx
 import { Inter } from 'next/font/google';
-import { config } from '@/config/env';
 import { Providers } from './providers';
-import { Toaster } from '@/components/ui/toaster';
 import '../styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -12,7 +12,7 @@ export const metadata = {
   description: 'Intelligent wallet management with AI assistance for Solana blockchain',
   keywords: 'Solana, Wallet, AI, Blockchain, Crypto',
   viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#3b82f6'
+  themeColor: '#3b82f6',
 };
 
 interface RootLayoutProps {
@@ -26,9 +26,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
-        {isDevelopment && (
-          <meta name="robots" content="noindex,nofollow" />
-        )}
+        {isDevelopment && <meta name="robots" content="noindex,nofollow" />}
       </head>
       <body className={`${inter.className} antialiased`}>
         {isDevelopment && (
@@ -39,9 +37,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
         <div className="min-h-screen bg-gray-50">
           <Providers>
-            <main className="max-w-7xl mx-auto">
-              {children}
-            </main>
+            <main className="max-w-7xl mx-auto">{children}</main>
           </Providers>
           <Toaster />
         </div>

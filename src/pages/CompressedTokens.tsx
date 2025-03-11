@@ -1,50 +1,55 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { Button } from "@/components/ui/button";
-import { Loader } from "@/components/ui/loader";
-import { useRouter } from 'next/router';
-import { SendHorizontal, Coins, RefreshCcw, RotateCcw } from "lucide-react";
-import { useCompressedTokenBalance } from "@/hooks/useCompressedTokenBalance";
-import { CompressedTokenInfo } from "@/context/tokensContexts";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import type { MintTokensModalProps } from '@/components/modals/MintTokensModal';
+import type {
+  DecompressTokenModalProps,
+  SendCompressedTokensModalProps,
+} from '@/components/modals/types';
+import { Button } from '@/components/ui/button';
+import { Loader } from '@/components/ui/loader';
+import type { CompressedTokenInfo } from '@/context/tokensContexts';
+import { useCompressedTokenBalance } from '@/hooks/useCompressedTokenBalance';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Coins, RefreshCcw, RotateCcw, SendHorizontal } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { MintTokensModalProps } from "@/components/modals/MintTokensModal";
-import { SendCompressedTokensModalProps, DecompressTokenModalProps } from "@/components/modals/types";
-
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 // Dynamic imports with proper typings
 const MintTokensModal = dynamic<MintTokensModalProps>(
-  () => import('@/components/modals/MintTokensModal').then(mod => {
-    const { MintTokensModal } = mod;
-    return MintTokensModal;
-  }),
-  { 
+  () =>
+    import('@/components/modals/MintTokensModal').then((mod) => {
+      const { MintTokensModal } = mod;
+      return MintTokensModal;
+    }),
+  {
     ssr: false,
-    loading: () => <Loader />
+    loading: () => <Loader />,
   }
 );
 
 const SendCompressedTokensModal = dynamic<SendCompressedTokensModalProps>(
-  () => import('@/components/modals/SendCompressedTokensModal').then(mod => {
-    const { SendCompressedTokensModal } = mod;
-    return SendCompressedTokensModal;
-  }),
-  { 
+  () =>
+    import('@/components/modals/SendCompressedTokensModal').then((mod) => {
+      const { SendCompressedTokensModal } = mod;
+      return SendCompressedTokensModal;
+    }),
+  {
     ssr: false,
-    loading: () => <Loader />
+    loading: () => <Loader />,
   }
 );
 
 const DecompressTokenModal = dynamic<DecompressTokenModalProps>(
-  () => import('@/components/modals/DecompressTokenModal').then(mod => {
-    const { DecompressTokenModal } = mod;
-    return DecompressTokenModal;
-  }),
-  { 
+  () =>
+    import('@/components/modals/DecompressTokenModal').then((mod) => {
+      const { DecompressTokenModal } = mod;
+      return DecompressTokenModal;
+    }),
+  {
     ssr: false,
-    loading: () => <Loader />
+    loading: () => <Loader />,
   }
 );
 
@@ -63,12 +68,12 @@ const CompressedTokensContent = () => {
   const [isDecompressingTokens, setIsDecompressingTokens] = useState(false);
   const [selectedToken, setSelectedToken] = useState<CompressedTokenInfo | null>(null);
   const [filteredTokens, setFilteredTokens] = useState<CompressedTokenInfo[] | null>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const handler = setTimeout(() => {
       if (!allCompressedTokens) return;
-      
+
       if (search) {
         const filtered = allCompressedTokens.filter((token) =>
           token.mint.toLowerCase().includes(search.toLowerCase())
@@ -111,9 +116,7 @@ const CompressedTokensContent = () => {
     <ErrorBoundary>
       <div className="p-6">
         <div className="flex justify-between items-center pb-5">
-          <h1 className="text-4xl font-semibold text-gray-700">
-            Compressed Wallet
-          </h1>
+          <h1 className="text-4xl font-semibold text-gray-700">Compressed Wallet</h1>
           <button
             disabled={isFetchingCompressedTokens}
             onClick={() => refetchCompressedTokens()}
@@ -122,7 +125,7 @@ const CompressedTokensContent = () => {
             <RotateCcw strokeWidth={1.25} size={20} />
           </button>
         </div>
-        
+
         {errorFetchingCompressedTokens ? (
           <p className="text-red-500 font-light text-sm text-center">
             {errorFetchingCompressedTokens}
@@ -137,7 +140,7 @@ const CompressedTokensContent = () => {
                 className="w-full p-2 rounded-md bg-gray-100 focus:outline-black text-gray-600 font-light"
               />
             </div>
-            
+
             <div className="grid grid-cols-[1fr_150px_300px] items-center gap-4 h-8 px-2 text-gray-700 font-semibold">
               <h3>Mint</h3>
               <h3 className="text-right">Balance</h3>
@@ -155,7 +158,7 @@ const CompressedTokensContent = () => {
                 >
                   <p className="truncate">{token.mint}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-end">
                   <p>{token.balance}</p>
                 </div>
@@ -173,7 +176,7 @@ const CompressedTokensContent = () => {
                     Mint
                     <Coins className="ml-1" size={16} strokeWidth={1.25} />
                   </Button>
-                  
+
                   <Button
                     variant="secondary"
                     size="sm"
@@ -186,7 +189,7 @@ const CompressedTokensContent = () => {
                     Send
                     <SendHorizontal className="ml-1" strokeWidth={1.25} size={16} />
                   </Button>
-                  
+
                   <Button
                     variant="secondary"
                     size="sm"

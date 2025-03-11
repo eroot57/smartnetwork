@@ -48,12 +48,7 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "ignore": [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "public/**"
-    ]
+    "ignore": ["node_modules/**", ".next/**", "out/**", "public/**"]
   },
   "javascript": {
     "formatter": {

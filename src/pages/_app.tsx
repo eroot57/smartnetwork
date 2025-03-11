@@ -1,9 +1,12 @@
-import type { AppProps } from 'next/app';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
+import {
+  ConnectionProvider,
+  WalletProvider as SolanaWalletProvider,
+} from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
+import type { AppProps } from 'next/app';
 import { useMemo } from 'react';
 import { WalletProvider } from '../context/walletContext';
 
@@ -15,10 +18,10 @@ import '../styles/globals.css';
 function MyApp({ Component, pageProps }: AppProps) {
   // You can use Mainnet, Testnet, or Devnet
   const network = WalletAdapterNetwork.Devnet;
-  
+
   // You can also provide custom RPC endpoint
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  
+
   // Initialize wallet adapters
   const wallets = useMemo(
     () => [

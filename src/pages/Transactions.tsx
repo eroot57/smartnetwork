@@ -1,33 +1,28 @@
 // src/pages/transactions/page.tsx
 'use client';
 
-import { openExplorerUrl } from "@/utils/solana";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { Loader } from "@/components/ui/loader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import moment from "moment";
-import { useTransactions } from "@/hooks/useTransactions";
-import { RotateCcw, ExternalLink } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/router";
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader } from '@/components/ui/loader';
+import { useTransactions } from '@/hooks/useTransactions';
+import { openExplorerUrl } from '@/utils/solana';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { ExternalLink, RotateCcw } from 'lucide-react';
+import moment from 'moment';
+import { useRouter } from 'next/router';
+import { useCallback, useEffect, useState } from 'react';
 
 const TransactionsContent = () => {
   const { publicKey } = useWallet();
-  const [search, setSearch] = useState("");
-  const { 
-    transactions, 
-    isLoading, 
-    error,
-    refetch 
-  } = useTransactions(publicKey?.toString() || "");
+  const [search, setSearch] = useState('');
+  const { transactions, isLoading, error, refetch } = useTransactions(publicKey?.toString() || '');
   const [filteredTransactions, setFilteredTransactions] = useState(transactions);
 
   useEffect(() => {
     const filterTransactions = () => {
       if (!transactions) return;
-      
+
       if (search) {
         const filtered = transactions.filter((txn) =>
           txn.signature?.toLowerCase().includes(search.toLowerCase())
@@ -85,9 +80,7 @@ const TransactionsContent = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex justify-between items-center pb-6">
-        <h1 className="text-3xl font-semibold text-gray-800">
-          Transactions
-        </h1>
+        <h1 className="text-3xl font-semibold text-gray-800">Transactions</h1>
         <Button
           variant="outline"
           size="icon"
@@ -117,7 +110,7 @@ const TransactionsContent = () => {
             />
           </div>
 
-          {(!transactions || transactions.length === 0) ? (
+          {!transactions || transactions.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 font-light">No transactions found</p>
             </div>
@@ -128,10 +121,8 @@ const TransactionsContent = () => {
                 <h3>Signature</h3>
                 <div />
               </div>
-              
-              <div className="space-y-1">
-                {filteredTransactions?.map(renderTransactionRow)}
-              </div>
+
+              <div className="space-y-1">{filteredTransactions?.map(renderTransactionRow)}</div>
             </div>
           )}
         </>

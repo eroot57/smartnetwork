@@ -1,8 +1,8 @@
-import type { Abi } from "abitype";
+import type { Abi } from 'abitype';
 
 export type EVMReadRequest = {
-    address: string;
-    functionName: string;
-    args?: unknown[];
-    abi: Abi;
+  address: string;
+  functionName: string;
+  args?: unknown[];
+  abi: Abi;
 };

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { CompressedTokenInfo, useTokens } from "@/context/tokensContexts";
-import { fetCompressedTokenBalances } from "@/utils/zkCompression";
+import { type CompressedTokenInfo, useTokens } from '@/context/tokensContexts';
+import { fetCompressedTokenBalances } from '@/utils/zkCompression';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type UseCompressedTokenBalanceHook = {
   compressedTokens: CompressedTokenInfo[];
@@ -21,7 +21,7 @@ export const useCompressedTokenBalance = (): UseCompressedTokenBalanceHook => {
   const fetchCompressedTokens = useCallback(
     async (showLoading = true) => {
       if (!connectedWallet) {
-        setError("Wallet not connected");
+        setError('Wallet not connected');
         return;
       }
       setIsFetching(showLoading);
@@ -31,8 +31,8 @@ export const useCompressedTokenBalance = (): UseCompressedTokenBalanceHook => {
         setCompressedTokens(tokens);
         hasFetchedRef.current = true;
       } catch (err: any) {
-        console.error("Error fetching compressed tokens:", err);
-        setError(err?.message || "Unknown error");
+        console.error('Error fetching compressed tokens:', err);
+        setError(err?.message || 'Unknown error');
       } finally {
         setIsFetching(false);
       }

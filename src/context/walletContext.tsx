@@ -1,5 +1,6 @@
-import React, { useMemo, createContext } from "react";
-import { PublicKey } from '@solana/web3.js';
+import type { PublicKey } from '@solana/web3.js';
+import type React from 'react';
+import { createContext, useMemo } from 'react';
 
 export interface WalletContextState {
   publicKey: PublicKey | null;
@@ -25,14 +26,11 @@ export const WalletContext = createContext<WalletContextState>({
 
 function getRpcUrl() {
   // Define your RPC URL here
-  return "https://api.testnet.solana.com";
+  return 'https://api.testnet.solana.com';
 }
-import {
-  ConnectionProvider,
-  WalletProvider,
-} from "@solana/wallet-adapter-react";
-import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 
 export default function AppWalletProvider({
   children,

@@ -1,10 +1,5 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import DecompressTokensForm from "../forms/TokenForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import DecompressTokensForm from '../forms/TokenForm';
 
 type Props = {
   mint?: string | null;

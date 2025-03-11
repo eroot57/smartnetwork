@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { WalletContext, WalletContextState } from '@/context/walletContext';
+import { WalletContext, type WalletContextState } from '@/context/walletContext';
+import { useSolBalance } from '@/hooks/useSolBalance';
 //import Loader from '../components/Loader';
 import { formatUtils } from '@/lib/utils/format';
 import { Wallet } from 'lucide-react';
-import { useSolBalance } from '@/hooks/useSolBalance';
+import React, { useContext } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Loader } from '../ui/loader';
 //import useWalletBalance from '../hooks/useWalletBalance';
 
@@ -73,7 +73,8 @@ export function WalletInfo() {
                   <ul>
                     {tokens.map((token: Token) => (
                       <li key={token.name}>
-                        {token.symbol}: {formatUtils.formatNumber(parseFloat(token.amount), token.decimals)}
+                        {token.symbol}:{' '}
+                        {formatUtils.formatNumber(Number.parseFloat(token.amount), token.decimals)}
                       </li>
                     ))}
                   </ul>
@@ -95,6 +96,6 @@ export function WalletInfo() {
 
 export default WalletInfo;
 
-function useWalletBalance(): { balance: any; loading: any; } {
+function useWalletBalance(): { balance: any; loading: any } {
   throw new Error('Function not implemented.');
 }

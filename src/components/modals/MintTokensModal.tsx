@@ -1,5 +1,4 @@
-// src/components/modals/MintTokensModal.tsx
-import { FC } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,13 +6,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader } from "@/components/ui/loader";
-import { useState } from "react";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Loader } from '@/components/ui/loader';
 import { useToast } from '@/hooks/use-toast';
-
+// src/components/modals/MintTokensModal.tsx
+import type { FC } from 'react';
+import { useState } from 'react';
 
 export interface MintTokensModalProps {
   open: boolean;
@@ -21,21 +20,17 @@ export interface MintTokensModalProps {
   mint: string;
 }
 
-export const MintTokensModal: FC<MintTokensModalProps> = ({ 
-  open, 
-  onClose, 
-  mint 
-}) => {
+export const MintTokensModal: FC<MintTokensModalProps> = ({ open, onClose, mint }) => {
   const { toast } = useToast();
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleMint = async () => {
-    if (!amount || isNaN(Number(amount))) {
+    if (!amount || Number.isNaN(Number(amount))) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid number",
-        variant: "destructive",
+        title: 'Invalid amount',
+        description: 'Please enter a valid number',
+        variant: 'destructive',
       });
       return;
     }
@@ -43,17 +38,17 @@ export const MintTokensModal: FC<MintTokensModalProps> = ({
     setIsLoading(true);
     try {
       // Implement your minting logic here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay
       toast({
-        title: "Success",
-        description: "Tokens minted successfully",
+        title: 'Success',
+        description: 'Tokens minted successfully',
       });
       onClose();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to mint tokens",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to mint tokens',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -87,17 +82,10 @@ export const MintTokensModal: FC<MintTokensModalProps> = ({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleMint}
-            disabled={isLoading}
-          >
+          <Button onClick={handleMint} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader className="mr-2 h-4 w-4" />

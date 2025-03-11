@@ -1,5 +1,4 @@
-// src/components/modals/SendCompressedTokensModal.tsx
-import { FC, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,39 +6,40 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader } from "@/components/ui/loader";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Loader } from '@/components/ui/loader';
+// src/components/modals/SendCompressedTokensModal.tsx
+import { type FC, useState } from 'react';
 
-import type { SendCompressedTokensModalProps } from './types';
 import { useToast } from '@/hooks/use-toast';
+import type { SendCompressedTokensModalProps } from './types';
 
 export const SendCompressedTokensModal: FC<SendCompressedTokensModalProps> = ({
   open,
   onClose,
-  mint
+  mint,
 }) => {
   const { toast } = useToast();
-  const [recipient, setRecipient] = useState("");
-  const [amount, setAmount] = useState("");
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSend = async () => {
-    if (!amount || isNaN(Number(amount))) {
+    if (!amount || Number.isNaN(Number(amount))) {
       toast({
-        title: "Invalid amount",
-        description: "Please enter a valid amount",
-        variant: "destructive",
+        title: 'Invalid amount',
+        description: 'Please enter a valid amount',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!recipient) {
       toast({
-        title: "Invalid recipient",
-        description: "Please enter a recipient address",
-        variant: "destructive",
+        title: 'Invalid recipient',
+        description: 'Please enter a recipient address',
+        variant: 'destructive',
       });
       return;
     }
@@ -47,17 +47,17 @@ export const SendCompressedTokensModal: FC<SendCompressedTokensModalProps> = ({
     setIsLoading(true);
     try {
       // Implement your send logic here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock delay
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Mock delay
       toast({
-        title: "Success",
-        description: "Tokens sent successfully",
+        title: 'Success',
+        description: 'Tokens sent successfully',
       });
       onClose();
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send tokens",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to send tokens',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -104,17 +104,10 @@ export const SendCompressedTokensModal: FC<SendCompressedTokensModalProps> = ({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSend}
-            disabled={isLoading}
-          >
+          <Button onClick={handleSend} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader className="mr-2 h-4 w-4" />
@@ -131,4 +124,4 @@ export const SendCompressedTokensModal: FC<SendCompressedTokensModalProps> = ({
 };
 
 // Re-export for convenience
-export { type SendCompressedTokensModalProps } from './types';
+export type { SendCompressedTokensModalProps } from './types';

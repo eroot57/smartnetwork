@@ -1,6 +1,6 @@
-// src/lib/ai/prompts.ts
-import { WalletState } from '@/types/wallet';
 import { formatUtils } from '@/lib/utils/format';
+// src/lib/ai/prompts.ts
+import type { WalletState } from '@/types/wallet';
 
 interface PromptContext {
   walletState?: WalletState;
@@ -49,7 +49,7 @@ export class PromptsManager {
         Format your response with clear sections and include a RISK_SCORE: and RECOMMENDATION: prefix for key points.
       `,
       required: ['amount', 'recipient', 'balance'],
-      optional: ['purpose', 'usdAmount', 'riskTolerance', 'marketTrend', 'volatility']
+      optional: ['purpose', 'usdAmount', 'riskTolerance', 'marketTrend', 'volatility'],
     },
 
     // Portfolio Analysis Prompts
@@ -81,7 +81,7 @@ export class PromptsManager {
         Format your response with clear sections and include a HEALTH_SCORE: and ACTION_ITEMS: prefix for key points.
       `,
       required: ['balance', 'tokens', 'solPrice'],
-      optional: ['nfts', 'marketTrend', 'volatility', 'riskTolerance', 'investmentStyle']
+      optional: ['nfts', 'marketTrend', 'volatility', 'riskTolerance', 'investmentStyle'],
     },
 
     // Market Analysis Prompts
@@ -109,7 +109,7 @@ export class PromptsManager {
         Format your response with clear sections and include a SENTIMENT: and OPPORTUNITY: prefix for key points.
       `,
       required: ['solPrice', 'marketTrend'],
-      optional: ['priceChange', 'volatility', 'balance', 'avgEntry']
+      optional: ['priceChange', 'volatility', 'balance', 'avgEntry'],
     },
 
     // AI Assistant Conversation Prompts
@@ -129,7 +129,7 @@ export class PromptsManager {
         Include specific steps or recommendations when applicable.
       `,
       required: ['query', 'balance', 'network'],
-      optional: ['communicationStyle']
+      optional: ['communicationStyle'],
     },
 
     // Risk Assessment Prompts
@@ -156,7 +156,7 @@ export class PromptsManager {
         Format your response with clear sections and include a RISK_SCORE: and SECURITY_ADVICE: prefix for key points.
       `,
       required: ['balance', 'network'],
-      optional: ['txVolume', 'interactions', 'connectedApps', 'suspiciousActivity']
+      optional: ['txVolume', 'interactions', 'connectedApps', 'suspiciousActivity'],
     },
 
     // Token Swap Analysis Prompts
@@ -183,21 +183,21 @@ export class PromptsManager {
         Format your response with clear sections and include a SWAP_SCORE: and RECOMMENDATION: prefix for key points.
       `,
       required: ['fromToken', 'toToken', 'fromAmount', 'toAmount'],
-      optional: ['slippage', 'priceImpact', 'marketTrend', 'volatility']
-    }
+      optional: ['slippage', 'priceImpact', 'marketTrend', 'volatility'],
+    },
   };
 
   public static generatePrompt(
     templateKey: keyof typeof PromptsManager.TEMPLATES,
     context: Record<string, any>
   ): string {
-    const template = this.TEMPLATES[templateKey];
+    const template = PromptsManager.TEMPLATES[templateKey];
     if (!template) {
       throw new Error(`Template not found: ${templateKey}`);
     }
 
     // Validate required fields
-    const missingFields = template.required.filter(field => !context.hasOwnProperty(field));
+    const missingFields = template.required.filter((field) => !context.hasOwnProperty(field));
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields for ${templateKey}: ${missingFields.join(', ')}`);
     }
@@ -205,8 +205,8 @@ export class PromptsManager {
     // Replace template variables with context values
     let prompt = template.template;
     const allFields = [...template.required, ...(template.optional || [])];
-    
-    allFields.forEach(field => {
+
+    allFields.forEach((field) => {
       const value = context[field] ?? '';
       prompt = prompt.replace(new RegExp(`{${field}}`, 'g'), value.toString());
     });
@@ -231,12 +231,12 @@ export class PromptsManager {
       ...additionalContext,
       userPreferences: {
         ...baseContext.userPreferences,
-        ...additionalContext?.userPreferences
+        ...additionalContext?.userPreferences,
       },
       marketData: {
         ...baseContext.marketData,
-        ...additionalContext?.marketData
-      }
+        ...additionalContext?.marketData,
+      },
     };
   }
 }

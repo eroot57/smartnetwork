@@ -1,9 +1,9 @@
-// src/hooks/useCrossmintWallet.ts
-import { useState, useEffect, useContext } from 'react';
 import { crossmintService } from '@/services/crossmint';
-import { WalletState } from '@/types/wallet';
+import type { WalletState } from '@/types/wallet';
+import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+// src/hooks/useCrossmintWallet.ts
+import { useContext, useEffect, useState } from 'react';
 import { WalletContext } from '../context/walletContext';
-import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export function useCrossmintWallet() {
   const { publicKey, connected } = useContext(WalletContext);
@@ -30,8 +30,8 @@ export function useCrossmintWallet() {
     try {
       const wallet = await crossmintService.createWallet();
       const balance = await crossmintService.getBalance(wallet.address);
-      
-      setWalletState(prev => ({
+
+      setWalletState((prev) => ({
         ...prev,
         publicKey: new PublicKey(wallet.address),
         connected: true,
@@ -42,7 +42,7 @@ export function useCrossmintWallet() {
         error: null,
       }));
     } catch (error) {
-      setWalletState(prev => ({
+      setWalletState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : 'Failed to initialize wallet',
@@ -62,7 +62,7 @@ export function useCrossmintWallet() {
     try {
       const balance = await connection.getBalance(publicKey);
       setBalance(balance / LAMPORTS_PER_SOL);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch balance');
     } finally {
       setLoading(false);
@@ -102,7 +102,7 @@ export function useCrossmintWallet() {
 
 const useWalletBalance = () => {
   const { publicKey, connected } = useContext(WalletContext);
-  const [walletState, setWalletState] = useState<WalletState>({
+  const [_walletState, _setWalletState] = useState<WalletState>({
     publicKey: null,
     connected: false,
     connecting: false,
@@ -114,7 +114,7 @@ const useWalletBalance = () => {
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [tokens, setTokens] = useState<any[]>([]); // Add tokens state
+  const [tokens, _setTokens] = useState<any[]>([]); // Add tokens state
 
   const connection = new Connection('https://api.mainnet-beta.solana.com');
 
@@ -131,7 +131,7 @@ const useWalletBalance = () => {
       const balance = await connection.getBalance(publicKey);
       setBalance(balance / LAMPORTS_PER_SOL);
       // Fetch tokens here if needed and setTokens
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch balance');
     } finally {
       setLoading(false);

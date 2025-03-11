@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,8 +6,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dialog';
+import type { FC } from 'react';
 
 export interface MintCreatedModalProps {
   open: boolean;
@@ -21,9 +21,7 @@ const MintCreatedModal: FC<MintCreatedModalProps> = ({ open, onClose, mintAddres
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Mint Created</DialogTitle>
-          <DialogDescription>
-            The mint address is {mintAddress}
-          </DialogDescription>
+          <DialogDescription>The mint address is {mintAddress}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

@@ -1,3 +1,3 @@
-export * from "./types";
-export * from "./AptosWalletClient";
-export * from "./sendAPT.plugin";
+export * from './types';
+export * from './AptosWalletClient';
+export * from './sendAPT.plugin';

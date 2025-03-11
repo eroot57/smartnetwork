@@ -1,7 +1,13 @@
-import { FC } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { TokenAccount } from "@/utils/solana";
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type { TokenAccount } from '@/utils/solana';
+import type { FC } from 'react';
 
 export interface ReclaimModalProps {
   open: boolean;

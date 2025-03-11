@@ -1,6 +1,6 @@
-import { EventEmitter } from 'events';
-import { Transaction as SolanaTransaction } from '@solana/web3.js';
-import { AptosClient, Types as AptosTypes } from 'aptos';
+import type { EventEmitter } from 'node:events';
+import type { Transaction as SolanaTransaction } from '@solana/web3.js';
+import { AptosClient, type Types as AptosTypes } from 'aptos';
 type AptosTransaction = AptosTypes.Transaction;
 
 export interface WalletClient extends EventEmitter {

@@ -1,5 +1,5 @@
 // src/types/token.ts
-import { PublicKey } from '@solana/web3.js';
+import type { PublicKey } from '@solana/web3.js';
 
 export interface SplTokenAccount {
   mint: string;

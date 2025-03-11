@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import React, { useEffect } from 'react';
+import type React from 'react';
+import { useEffect } from 'react';
 
 const NotFoundPage: React.FC = () => {
-  useEffect(() => {
-    console.log('Environment Variables:', process.env);
-  }, []);
+  useEffect(() => {}, []);
 
   return (
     <div>
