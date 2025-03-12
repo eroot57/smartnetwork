@@ -31,20 +31,22 @@ const CompressedTokens = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (search) {
-        const filtered = allCompressedTokens?.filter((token) =>
-          token.mint.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredTokens(filtered);
-      } else {
-        setFilteredTokens(allCompressedTokens);
-      }
-    }, 10);
+    if (typeof window !== 'undefined') {
+      const handler = setTimeout(() => {
+        if (search) {
+          const filtered = allCompressedTokens?.filter((token) =>
+            token.mint.toLowerCase().includes(search.toLowerCase())
+          );
+          setFilteredTokens(filtered);
+        } else {
+          setFilteredTokens(allCompressedTokens);
+        }
+      }, 10);
 
-    return () => {
-      clearTimeout(handler);
-    };
+      return () => {
+        clearTimeout(handler);
+      };
+    }
   }, [search, allCompressedTokens]);
 
   const tokensToRender = search ? filteredTokens : allCompressedTokens;
