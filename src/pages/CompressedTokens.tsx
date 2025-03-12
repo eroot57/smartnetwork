@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, useNavigate } from 'react-router-dom';
+import dynamic from 'next/dynamic';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Button } from "@/components/ui/button";
@@ -93,11 +94,13 @@ const CompressedTokens = () => {
   );
 };
 
+const CompressedTokensWithRouter = dynamic(() => import('react-router-dom').then(mod => mod.BrowserRouter), { ssr: false });
+
 const App = () => (
   <TokenContextProvider>
-    <Router>
+    <CompressedTokensWithRouter>
       <CompressedTokens />
-    </Router>
+    </CompressedTokensWithRouter>
   </TokenContextProvider>
 );
 
