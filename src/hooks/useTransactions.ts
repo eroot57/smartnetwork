@@ -1,97 +1,210 @@
-import { useConnection } from '@solana/wallet-adapter-react';
-import { type ParsedTransactionWithMeta, PublicKey } from '@solana/web3.js';
 // src/hooks/useTransactions.ts
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
+import { crossmintService } from '@/services/crossmint';
 
-interface TransactionInfo {
-  signature: string;
+interface Transaction {
+  id: string;
+  type: 'incoming' | 'outgoing';
+  amount: string;
+  from: string;
+  to: string;
   timestamp: Date;
-  status: 'success' | 'error';
-  errorMessage?: string;
-  type?: string;
-  amount?: number;
+  status: 'pending' | 'confirmed' | 'failed';
+  signature?: string;
+  error?: string;
 }
 
-export const useTransactions = (walletAddress: string) => {
-  const { connection } = useConnection();
-  const [transactions, setTransactions] = useState<TransactionInfo[]>([]);
+interface TransactionFilters {
+  type?: 'incoming' | 'outgoing';
+  startDate?: Date;
+  endDate?: Date;
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+interface TransactionStats {
+  totalVolume: number;
+  averageAmount: number;
+  largestTransaction: number;
+  totalIncoming: number;
+  totalOutgoing: number;
+  successRate: number;
+}
+
+interface UseTransactionsResult {
+  transactions: Transaction[];
+  stats: TransactionStats;
+  isLoading: boolean;
+  error: string | null;
+  sendTransaction: (to: string, amount: number) => Promise<Transaction>;
+  fetchTransactions: (filters?: TransactionFilters) => Promise<void>;
+  getTransactionStatus: (txId: string) => Promise<string>;
+  calculateStats: (transactions: Transaction[]) => TransactionStats;
+  filterTransactions: (filters: TransactionFilters) => Transaction[];
+}
+
+export function useTransactions(walletAddress: string): UseTransactionsResult {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<TransactionStats>({
+    totalVolume: 0,
+    averageAmount: 0,
+    largestTransaction: 0,
+    totalIncoming: 0,
+    totalOutgoing: 0,
+    successRate: 0,
+  });
 
-  const parseTransaction = (tx: ParsedTransactionWithMeta): TransactionInfo | null => {
-    if (!tx.blockTime) return null;
+  const calculateStats = useCallback((txs: Transaction[]): TransactionStats => {
+    const confirmedTxs = txs.filter(tx => tx.status === 'confirmed');
+    const totalTxs = txs.length;
+    
+    const amounts = confirmedTxs.map(tx => parseFloat(tx.amount));
+    const incomingAmounts = confirmedTxs
+      .filter(tx => tx.type === 'incoming')
+      .map(tx => parseFloat(tx.amount));
+    const outgoingAmounts = confirmedTxs
+      .filter(tx => tx.type === 'outgoing')
+      .map(tx => parseFloat(tx.amount));
 
-    try {
-      return {
-        signature: tx.transaction.signatures[0],
-        timestamp: new Date(tx.blockTime * 1000),
-        status: tx.meta?.err ? 'error' : 'success',
-        errorMessage: tx.meta?.err ? JSON.stringify(tx.meta.err) : undefined,
-        // Add more transaction details here as needed
-      };
-    } catch (err) {
-      console.error('Error parsing transaction:', err);
-      return null;
-    }
-  };
+    const totalVolume = amounts.reduce((sum, amount) => sum + amount, 0);
+    const averageAmount = totalVolume / amounts.length || 0;
+    const largestTransaction = Math.max(...amounts, 0);
+    const totalIncoming = incomingAmounts.reduce((sum, amount) => sum + amount, 0);
+    const totalOutgoing = outgoingAmounts.reduce((sum, amount) => sum + amount, 0);
+    const successRate = (confirmedTxs.length / totalTxs) * 100 || 0;
 
-  const fetchTransactions = useCallback(async () => {
-    if (!walletAddress) {
-      setTransactions([]);
-      return;
-    }
+    return {
+      totalVolume,
+      averageAmount,
+      largestTransaction,
+      totalIncoming,
+      totalOutgoing,
+      successRate,
+    };
+  }, []);
 
+  const fetchTransactions = useCallback(async (filters?: TransactionFilters) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Fetch recent signatures
-      const signatures = await connection.getSignaturesForAddress(new PublicKey(walletAddress), {
-        limit: 50,
-      });
+      // Fetch transactions from Crossmint service
+      const response: Transaction[] = await crossmintService.getTransactions(walletAddress);
+      
+      // Format transactions
+      const formattedTxs: Transaction[] = response.map((tx: any) => ({
+        id: tx.id,
+        type: tx.fromAddress === walletAddress ? 'outgoing' : 'incoming',
+        amount: tx.amount,
+        from: tx.fromAddress,
+        to: tx.toAddress,
+        timestamp: new Date(tx.timestamp),
+        status: tx.status,
+        signature: tx.signature,
+      }));
 
-      // Fetch transaction details
-      const parsedTransactions = await Promise.all(
-        signatures.map(async (sigInfo) => {
-          try {
-            const tx = await connection.getParsedTransaction(sigInfo.signature, {
-              maxSupportedTransactionVersion: 0,
-            });
-            return tx ? parseTransaction(tx) : null;
-          } catch (err) {
-            console.error('Error fetching transaction:', err);
-            return null;
-          }
-        })
-      );
-
-      // Filter out null values and sort by timestamp
-      const validTransactions = parsedTransactions
-        .filter((tx): tx is TransactionInfo => tx !== null)
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-      setTransactions(validTransactions);
+      // Apply filters if provided
+      const filteredTxs = filters ? filterTransactions(formattedTxs, filters) : formattedTxs;
+      
+      setTransactions(filteredTxs);
+      setStats(calculateStats(filteredTxs));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch transactions';
-      setError(errorMessage);
-      console.error('Error in fetchTransactions:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch transactions');
     } finally {
       setIsLoading(false);
     }
-  }, [connection, walletAddress]);
+  }, [walletAddress, calculateStats]);
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+  const filterTransactions = useCallback((txs: Transaction[], filters: TransactionFilters): Transaction[] => {
+    return txs.filter(tx => {
+      if (filters.type && tx.type !== filters.type) return false;
+      
+      if (filters.startDate && tx.timestamp < filters.startDate) return false;
+      if (filters.endDate && tx.timestamp > filters.endDate) return false;
+      
+      const amount = parseFloat(tx.amount);
+      if (filters.minAmount && amount < filters.minAmount) return false;
+      if (filters.maxAmount && amount > filters.maxAmount) return false;
+      
+      return true;
+    });
+  }, []);
 
-  const refetch = useCallback(() => {
-    return fetchTransactions();
-  }, [fetchTransactions]);
+  const sendTransaction = useCallback(async (to: string, amount: number): Promise<Transaction> => {
+    setError(null);
+
+    try {
+      const response = await crossmintService.sendTransaction(walletAddress, to, amount);
+      
+      const newTransaction: Transaction = {
+        id: response.id,
+        type: 'outgoing',
+        amount: amount.toString(),
+        from: walletAddress,
+        to,
+        timestamp: new Date(),
+        status: 'pending',
+        signature: response.signature,
+      };
+
+      setTransactions(prev => [newTransaction, ...prev]);
+      
+      // Start polling for transaction status
+      pollTransactionStatus(newTransaction.id);
+
+      return newTransaction;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Transaction failed';
+      setError(error);
+      throw new Error(error);
+    }
+  }, [walletAddress]);
+
+  const getTransactionStatus = useCallback(async (txId: string): Promise<string> => {
+    try {
+      const status = await crossmintService.getTransactionStatus(txId) as unknown as 'pending' | 'confirmed' | 'failed';
+      
+      // Update transaction status in state
+      setTransactions(prev =>
+        prev.map(tx =>
+          tx.id === txId ? { ...tx, status: status as 'confirmed' | 'pending' | 'failed' } : tx
+        )
+      );
+
+      return status;
+    } catch (err) {
+      console.error('Error fetching transaction status:', err);
+      return 'failed';
+    }
+  }, []);
+
+  const pollTransactionStatus = useCallback(async (txId: string) => {
+    const pollInterval = setInterval(async () => {
+      const status = await getTransactionStatus(txId);
+      
+      if (status === 'confirmed' || status === 'failed') {
+        clearInterval(pollInterval);
+        
+        // Update stats after transaction confirmation
+        setStats(prevStats => calculateStats([...transactions]));
+      }
+    }, 2000); // Poll every 2 seconds
+
+    // Clear interval after 2 minutes (max polling time)
+    setTimeout(() => clearInterval(pollInterval), 120000);
+  }, [getTransactionStatus, transactions, calculateStats]);
 
   return {
     transactions,
+    stats,
     isLoading,
     error,
-    refetch,
+    sendTransaction,
+    fetchTransactions,
+    getTransactionStatus,
+    calculateStats,
+    filterTransactions: (filters: TransactionFilters) => filterTransactions(transactions, filters),
   };
-};
+}

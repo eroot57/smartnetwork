@@ -1,6 +1,6 @@
+import { WalletState } from '@/types/wallet';
 import { env } from '@/config/env';
 import { ErrorHandler } from '@/lib/utils/error-handling';
-import type { WalletState } from '@/types/wallet';
 
 // Add the missing AIResponse interface
 export interface AIResponse {
@@ -75,19 +75,14 @@ export class WalletAI {
     this.agent = new Agent(config);
   }
 
-  static updateContext(config: {
-    balance: string;
-    address: string;
-    isLoading: boolean;
-    error: string | null;
-  }) {
+  static updateContext(config: { balance: string; address: string; isLoading: boolean; error: string | null }) {
     // Implementation of the updateContext method
     // This method updates the context with the provided configuration
-    WalletAI.context = {
+    this.context = {
       balance: config.balance,
       address: config.address,
       isLoading: config.isLoading,
-      error: config.error,
+      error: config.error
     };
   }
 
@@ -96,7 +91,7 @@ export class WalletAI {
     const message: AgentMessage = {
       type: 'question',
       content: query,
-      context: WalletAI.context,
+      context: this.context
     };
 
     const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
@@ -107,22 +102,18 @@ export class WalletAI {
       analysis: response.analysis && {
         risk: response.analysis.risk,
         recommendation: response.analysis.recommendation,
-        details: response.analysis.factors,
+        details: response.analysis.factors
       },
-      actions: instance.getActions(response),
+      actions: instance.getActions(response)
     };
   }
 
-  static async evaluateTransaction(
-    toAddress: string,
-    amount: number,
-    purpose?: string
-  ): Promise<AIResponse> {
+  static async evaluateTransaction(toAddress: string, amount: number, purpose?: string): Promise<AIResponse> {
     // Implementation of evaluateTransaction method
     const message: AgentMessage = {
       type: 'evaluation',
       content: 'Evaluate transaction',
-      context: { toAddress, amount, purpose, ...WalletAI.context },
+      context: { toAddress, amount, purpose, ...this.context }
     };
 
     const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
@@ -133,41 +124,30 @@ export class WalletAI {
       analysis: response.analysis && {
         risk: response.analysis.risk,
         recommendation: response.analysis.recommendation,
-        details: response.analysis.factors,
+        details: response.analysis.factors
       },
-      actions: instance.getActions(response),
+      actions: instance.getActions(response)
     };
   }
 
-  static async analyzeTransaction(
-    amount: number,
-    to: string,
-    memo?: string
-  ): Promise<{ suggestion: { type: string }; content: string }> {
+  static async analyzeTransaction(amount: number, to: string, memo?: string): Promise<{ suggestion: { type: string }, content: string }> {
     // Implementation of analyzeTransaction method
     const message: AgentMessage = {
       type: 'analysis',
       content: 'Analyze transaction',
-      context: { amount, to, memo, ...WalletAI.context },
+      context: { amount, to, memo, ...this.context }
     };
 
     const instance = new WalletAI({ name: 'default', description: 'default', traits: {} });
     const response = await instance.agent.process(message);
-    return {
-      suggestion: { type: response.suggestion?.type || 'default' },
-      content: response.content,
-    };
+    return { suggestion: { type: response.suggestion?.type || 'default' }, content: response.content };
   }
 
-  async analyzeTransaction(
-    amount: number,
-    recipient: string,
-    purpose?: string
-  ): Promise<AIResponse> {
+  async analyzeTransaction(amount: number, recipient: string, purpose?: string): Promise<AIResponse> {
     const message: AgentMessage = {
       type: 'analysis',
       content: 'Analyze transaction',
-      context: { amount, recipient, purpose },
+      context: { amount, recipient, purpose }
     };
 
     const response = await this.agent.process(message);
@@ -178,9 +158,9 @@ export class WalletAI {
       analysis: {
         risk: response.analysis?.risk || 0,
         recommendation: response.analysis?.recommendation || '',
-        details: response.analysis?.factors || [],
+        details: response.analysis?.factors || []
       },
-      actions: this.getActions(response),
+      actions: this.getActions(response)
     };
   }
 
@@ -188,7 +168,7 @@ export class WalletAI {
     const message: AgentMessage = {
       type: 'question',
       content: query,
-      context,
+      context
     };
 
     const response = await this.agent.process(message);
@@ -199,8 +179,8 @@ export class WalletAI {
       analysis: response.analysis && {
         risk: response.analysis.risk,
         recommendation: response.analysis.recommendation,
-        details: response.analysis.factors,
-      },
+        details: response.analysis.factors
+      }
     };
   }
 
@@ -210,14 +190,10 @@ export class WalletAI {
 
   private getResponseType(suggestionType?: string): AIResponse['type'] {
     switch (suggestionType) {
-      case 'reject':
-        return 'error';
-      case 'warning':
-        return 'warning';
-      case 'approve':
-        return 'success';
-      default:
-        return 'info';
+      case 'reject': return 'error';
+      case 'warning': return 'warning';
+      case 'approve': return 'success';
+      default: return 'info';
     }
   }
 
@@ -227,18 +203,16 @@ export class WalletAI {
     return {
       primary: {
         label: response.suggestion.type === 'approve' ? 'Proceed' : 'Review',
-        action: response.suggestion.action,
+        action: response.suggestion.action
       },
-      secondary:
-        response.suggestion.type !== 'approve'
-          ? {
-              label: 'Proceed Anyway',
-              action: 'proceed',
-            }
-          : undefined,
+      secondary: response.suggestion.type !== 'approve' ? {
+        label: 'Proceed Anyway',
+        action: 'proceed'
+      } : undefined
     };
   }
 }
+
 
 export class Agent {
   private config: AgentConfig;
@@ -263,7 +237,7 @@ export class Agent {
         default:
           throw new Error('Unknown message type');
       }
-    } catch (_error) {
+    } catch (error) {
       throw ErrorHandler.createError(500, 'AI_ERROR', 'Failed to process message');
     }
   }
@@ -271,13 +245,13 @@ export class Agent {
   public updateContext(context: Partial<AgentContext>): void {
     this.context = {
       ...this.context,
-      ...context,
+      ...context
     };
   }
 
   private async analyzeTransaction(message: AgentMessage): Promise<AgentResponse> {
     const { amount, recipient, purpose } = message.context || {};
-    const _walletState = this.context.walletState;
+    const walletState = this.context.walletState;
 
     // Perform basic transaction analysis
     const risk = this.calculateTransactionRisk(amount, recipient);
@@ -289,13 +263,13 @@ export class Agent {
       suggestion: {
         type: risk > 0.7 ? 'reject' : risk > 0.4 ? 'warning' : 'approve',
         reason: factors.join(', '),
-        action: this.suggestAction(risk),
+        action: this.suggestAction(risk)
       },
       analysis: {
         risk: risk * 100,
         factors,
-        recommendation: this.generateRecommendation(risk, factors),
-      },
+        recommendation: this.generateRecommendation(risk, factors)
+      }
     };
   }
 
@@ -305,8 +279,8 @@ export class Agent {
       confidence: 0.8,
       suggestion: {
         type: 'advice',
-        action: 'Consider the provided information',
-      },
+        action: 'Consider the provided information'
+      }
     };
   }
 
@@ -318,8 +292,8 @@ export class Agent {
       analysis: {
         risk: riskAnalysis.riskScore,
         factors: riskAnalysis.factors,
-        recommendation: riskAnalysis.recommendation,
-      },
+        recommendation: riskAnalysis.recommendation
+      }
     };
   }
 
@@ -329,21 +303,21 @@ export class Agent {
       confidence: 0.75,
       suggestion: {
         type: 'advice',
-        action: this.generateActionSuggestion(message.context),
-      },
+        action: this.generateActionSuggestion(message.context)
+      }
     };
   }
 
   private calculateTransactionRisk(amount: number, recipient: string): number {
     let risk = 0;
-    const balance = Number.parseFloat(this.context.walletState?.balance || '0');
+    const balance = parseFloat(this.context.walletState?.balance || '0');
 
     // Calculate risk based on amount relative to balance
     if (amount > balance * 0.5) risk += 0.3;
     if (amount > balance * 0.8) risk += 0.3;
 
     // Add additional risk factors
-    if (!this.context.transactionHistory?.some((tx) => tx.to === recipient)) {
+    if (!this.context.transactionHistory?.some(tx => tx.to === recipient)) {
       risk += 0.2; // New recipient
     }
 
@@ -352,13 +326,13 @@ export class Agent {
 
   private analyzeRiskFactors(amount: number, recipient: string, purpose?: string): string[] {
     const factors: string[] = [];
-    const balance = Number.parseFloat(this.context.walletState?.balance || '0');
+    const balance = parseFloat(this.context.walletState?.balance || '0');
 
     if (amount > balance * 0.5) {
       factors.push('Large transaction relative to balance');
     }
 
-    if (!this.context.transactionHistory?.some((tx) => tx.to === recipient)) {
+    if (!this.context.transactionHistory?.some(tx => tx.to === recipient)) {
       factors.push('First transaction to this recipient');
     }
 
@@ -372,11 +346,10 @@ export class Agent {
   private generateAnalysisResponse(risk: number, factors: string[]): string {
     if (risk > 0.7) {
       return `High-risk transaction detected. Concerns: ${factors.join(', ')}. Consider reviewing the transaction details.`;
-    }
-    if (risk > 0.4) {
+    } else if (risk > 0.4) {
       return `Moderate risk detected. Factors to consider: ${factors.join(', ')}. Proceed with caution.`;
     }
-    return 'Transaction appears safe. Standard precautions apply.';
+    return `Transaction appears safe. Standard precautions apply.`;
   }
 
   private suggestAction(risk: number): string {
@@ -385,24 +358,24 @@ export class Agent {
     return 'Safe to proceed';
   }
 
-  private generateRecommendation(risk: number, _factors: string[]): string {
+  private generateRecommendation(risk: number, factors: string[]): string {
     if (risk > 0.7) {
-      return 'High risk detected. Consider: \n- Verifying recipient\n- Reviewing amount\n- Adding transaction purpose';
+      return `High risk detected. Consider: \n- Verifying recipient\n- Reviewing amount\n- Adding transaction purpose`;
     }
-    return 'Transaction within normal parameters. Standard verification recommended.';
+    return `Transaction within normal parameters. Standard verification recommended.`;
   }
 
-  private generateAdviceResponse(_question: string): string {
+  private generateAdviceResponse(question: string): string {
     // Implement advice generation logic
-    return 'Based on your wallet activity and market conditions, I recommend...';
+    return `Based on your wallet activity and market conditions, I recommend...`;
   }
 
-  private performRiskAssessment(_context: any) {
+  private performRiskAssessment(context: any) {
     // Implement risk assessment logic
     return {
       riskScore: 50,
       factors: ['Market volatility', 'Transaction size'],
-      recommendation: 'Consider splitting the transaction',
+      recommendation: 'Consider splitting the transaction'
     };
   }
 
@@ -410,11 +383,11 @@ export class Agent {
     return `Risk assessment complete. Score: ${analysis.riskScore}/100. ${analysis.recommendation}`;
   }
 
-  private generateSuggestionResponse(_content: string): string {
-    return 'Based on your query, I suggest...';
+  private generateSuggestionResponse(content: string): string {
+    return `Based on your query, I suggest...`;
   }
 
-  private generateActionSuggestion(_context: any): string {
-    return 'Consider reviewing the transaction details before proceeding.';
+  private generateActionSuggestion(context: any): string {
+    return `Consider reviewing the transaction details before proceeding.`;
   }
 }

@@ -1,7 +1,7 @@
-import { WALLET_CONSTANTS } from '@/config/constants';
 // src/services/helius.ts
 import { config } from '@/config/env';
 import { ErrorHandler } from '@/lib/utils/error-handling';
+import { WALLET_CONSTANTS } from '@/config/constants';
 
 interface PriceData {
   symbol: string;
@@ -53,15 +53,15 @@ class HeliusService {
     return config.NEXT_PUBLIC_HELIUS_API_KEY;
   }
 
-  private async makeRequest<T>(endpoint: string, method = 'GET', body?: any): Promise<T> {
+  private async makeRequest<T>(endpoint: string, method: string = 'GET', body?: any): Promise<T> {
     try {
       const response = await fetch(`${this.getApiUrl()}${endpoint}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.getApiKey()}`,
+          'Authorization': `Bearer ${this.getApiKey()}`
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: body ? JSON.stringify(body) : undefined
       });
 
       if (!response.ok) {
@@ -69,7 +69,7 @@ class HeliusService {
       }
 
       return await response.json();
-    } catch (_error) {
+    } catch (error) {
       throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to fetch data from Helius');
     }
   }
@@ -82,7 +82,7 @@ class HeliusService {
 
     try {
       const response = await this.makeRequest<any>('/token-prices');
-
+      
       for (const [mint, data] of Object.entries(response)) {
         const priceData = data as PriceData;
         this.priceCache.set(mint, {
@@ -90,7 +90,7 @@ class HeliusService {
           price: priceData.price,
           change24h: priceData.change24h,
           volume24h: priceData.volume24h,
-          lastUpdated: now,
+          lastUpdated: now
         });
       }
 
@@ -105,7 +105,7 @@ class HeliusService {
   public async getTokenPrice(mint: string): Promise<PriceData> {
     await this.refreshPriceData();
     const priceData = this.priceCache.get(mint);
-
+    
     if (!priceData) {
       throw ErrorHandler.createError(400, 'VALIDATION_ERROR', 'Token price data not found');
     }
@@ -128,7 +128,7 @@ class HeliusService {
       jsonrpc: '2.0',
       id: 1,
       method: 'getAccountInfo',
-      params: [address, { encoding: 'jsonParsed' }],
+      params: [address, { encoding: 'jsonParsed' }]
     });
 
     return response.result?.value || null;
@@ -136,19 +136,19 @@ class HeliusService {
 
   public async getTokenBalances(walletAddress: string) {
     const response = await this.makeRequest<any>(`/balances/${walletAddress}`);
-
+    
     // Enrich with price data
     const enrichedBalances = await Promise.all(
       response.tokens.map(async (token: any) => {
         try {
           const priceData = await this.getTokenPrice(token.mint);
           const metadata = await this.getTokenMetadata(token.mint);
-
+          
           return {
             ...token,
             ...metadata,
             usdValue: token.amount * priceData.price,
-            priceData,
+            priceData
           };
         } catch {
           return token;
@@ -163,7 +163,7 @@ class HeliusService {
     return this.makeRequest<any>(`/nfts/${walletAddress}`);
   }
 
-  public async getTransactionHistory(walletAddress: string, limit = 50) {
+  public async getTransactionHistory(walletAddress: string, limit: number = 50) {
     return this.makeRequest<any>(`/transactions/${walletAddress}?limit=${limit}`);
   }
 
@@ -177,14 +177,12 @@ class HeliusService {
       ws = new WebSocket(`wss://api.helius.xyz/v0/ws?api-key=${this.getApiKey()}`);
 
       ws.onopen = () => {
-        ws?.send(
-          JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'priceSubscribe',
-            params: { mints },
-          })
-        );
+        ws?.send(JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'priceSubscribe',
+          params: { mints }
+        }));
       };
 
       ws.onmessage = (event) => {
@@ -193,8 +191,8 @@ class HeliusService {
           const prices = new Map<string, PriceData>();
           for (const [mint, priceData] of Object.entries(data.params)) {
             prices.set(mint, {
-              ...(priceData as PriceData),
-              lastUpdated: new Date(),
+              ...priceData as PriceData,
+              lastUpdated: new Date()
             });
           }
           callback(prices);

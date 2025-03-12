@@ -1,87 +1,81 @@
-import { type SplTokenAccount, TokenAccount } from '@/utils/solana';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { useConnection } from '@solana/wallet-adapter-react';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-// src/hooks/useSplTokenAccounts.ts
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { TokenAccount } from "@/utils/solana";
+import { useTokens } from "@/context/tokensContexts";
+import { fetchSplTokenAccounts } from "@/utils/solana";
 
-export function useSplTokenAccounts() {
-  const { connection } = useConnection();
-  const { publicKey } = useWallet();
+type UseSplTokenAccountsHook = {
+  splTokenAccounts: TokenAccount[];
+  isFetching: boolean;
+  error: string | null;
+  refetch: () => void;
+};
 
-  const [splTokenAccounts, setSplTokenAccounts] = useState<SplTokenAccount[]>([]);
+export const useSplTokenAccounts = (): UseSplTokenAccountsHook => {
+  const { publicKey: connectedWallet } = useWallet();
+  const { splTokenAccounts, setSplTokenAccounts } = useTokens();
+  const hasFetchedRef = useRef(false);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchTokenAccounts = useCallback(async () => {
-    if (!publicKey) {
-      setSplTokenAccounts([]);
-      return;
-    }
-
-    setIsFetching(true);
-    setError(null);
-
-    try {
-      // Fetch all token accounts owned by the wallet
-      const accounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
-        programId: TOKEN_PROGRAM_ID,
-      });
-
-      // Process and filter accounts
-      const tokenAccounts: SplTokenAccount[] = accounts.value
-        .map((account) => {
-          const parsedInfo = account.account.data.parsed.info;
-          return {
-            address: account.pubkey.toString(),
-            mint: parsedInfo.mint,
-            amount: parsedInfo.tokenAmount.uiAmount,
-            decimals: parsedInfo.tokenAmount.decimals,
-            authority: parsedInfo.owner,
-            // Additional data you might need
-            isNative: parsedInfo.isNative,
-            rentExemptReserve: parsedInfo.rentExemptReserve,
-          };
-        })
-        // Filter out accounts with zero balance if needed
-        .filter((account) => account.amount > 0);
-
-      setSplTokenAccounts(tokenAccounts);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch token accounts';
-      setError(errorMessage);
-      console.error('Error fetching token accounts:', err);
-    } finally {
-      setIsFetching(false);
-    }
-  }, [connection, publicKey]);
+  const fetchSplAccounts = useCallback(
+    async (showLoading = true) => {
+      if (!connectedWallet) {
+        setError("Wallet not connected");
+        return;
+      }
+      setIsFetching(showLoading);
+      setError(null);
+      try {
+        const accounts = await fetchSplTokenAccounts(connectedWallet);
+        setSplTokenAccounts(accounts);
+        hasFetchedRef.current = true;
+      } catch (err: any) {
+        console.error("Error fetching SPL tokens:", err);
+        setError(err?.message || "Unknown error");
+      } finally {
+        setIsFetching(false);
+      }
+    },
+    [connectedWallet, setSplTokenAccounts]
+  );
 
   useEffect(() => {
-    fetchTokenAccounts();
-  }, [fetchTokenAccounts]);
+    // Function to start polling
+    const startPolling = () => {
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      // Set up a new interval to fetch every 2.5 seconds
+      intervalRef.current = setInterval(() => {
+        fetchSplAccounts(false);
+      }, 2500);
+    };
 
-  const refetch = useCallback(() => {
-    return fetchTokenAccounts();
-  }, [fetchTokenAccounts]);
+    if (connectedWallet) {
+      if (!hasFetchedRef.current) {
+        fetchSplAccounts().then(() => {
+          startPolling();
+        });
+      } else {
+        startPolling();
+      }
+    }
+
+    // Cleanup function to clear the interval when component unmounts or wallet changes
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [connectedWallet, fetchSplAccounts]);
 
   return {
     splTokenAccounts,
     isFetching,
     error,
-    refetch,
+    refetch: fetchSplAccounts,
   };
-}
-
-// Add types for token accounts
-declare module '@/utils/solana' {
-  export interface SplTokenAccount {
-    address: string;
-    mint: string;
-    amount: number;
-    decimals: number;
-    authority: string;
-    isNative?: boolean;
-    rentExemptReserve?: string;
-  }
-}
+};

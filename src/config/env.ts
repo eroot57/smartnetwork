@@ -10,10 +10,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_SOLANA_RPC_HOST: z.string(),
 
   // API endpoints
-  NEXT_PUBLIC_CROSSMINT_API_URL: z
-    .string()
-    .url()
-    .default('https://staging.crossmint.com/api/v1-alpha2'),
+  NEXT_PUBLIC_CROSSMINT_API_URL: z.string().url().default('https://staging.crossmint.com/api/v1-alpha2'),
   NEXT_PUBLIC_JUPITER_API_URL: z.string().url().default('https://price.jup.ag/v4'),
   NEXT_PUBLIC_HELIUS_API_URL: z.string(),
 

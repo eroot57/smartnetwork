@@ -1,17 +1,7 @@
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Bell,
-  Bot,
-  Download,
-  Eye,
-  Languages,
-  Moon,
-  Settings as SettingsIcon,
-  Shield,
-} from 'lucide-react';
-import type React from 'react';
-import { useState } from 'react';
+import { Settings as SettingsIcon, Shield, Bot, Bell, Eye, Download, Languages, Moon } from 'lucide-react';
 
 interface SettingSection {
   id: string;
@@ -42,16 +32,16 @@ export function Settings() {
           label: 'Require Password for Transactions',
           type: 'toggle',
           value: true,
-          description: 'Request password confirmation for all transactions',
+          description: 'Request password confirmation for all transactions'
         },
         {
           id: 'transactionLimit',
           label: 'Transaction Limit',
           type: 'input',
           value: '100',
-          description: 'Maximum transaction amount in SOL',
-        },
-      ],
+          description: 'Maximum transaction amount in SOL'
+        }
+      ]
     },
     {
       id: 'ai',
@@ -63,7 +53,7 @@ export function Settings() {
           label: 'Transaction Analysis',
           type: 'toggle',
           value: true,
-          description: 'AI analysis of transactions before execution',
+          description: 'AI analysis of transactions before execution'
         },
         {
           id: 'aiPersonality',
@@ -71,9 +61,9 @@ export function Settings() {
           type: 'select',
           value: 'professional',
           options: ['professional', 'friendly', 'technical'],
-          description: 'Personality style of the AI assistant',
-        },
-      ],
+          description: 'Personality style of the AI assistant'
+        }
+      ]
     },
     {
       id: 'notifications',
@@ -85,16 +75,16 @@ export function Settings() {
           label: 'Price Alerts',
           type: 'toggle',
           value: true,
-          description: 'Receive notifications for price changes',
+          description: 'Receive notifications for price changes'
         },
         {
           id: 'transactionAlerts',
           label: 'Transaction Alerts',
           type: 'toggle',
           value: true,
-          description: 'Receive notifications for wallet transactions',
-        },
-      ],
+          description: 'Receive notifications for wallet transactions'
+        }
+      ]
     },
     {
       id: 'display',
@@ -107,7 +97,7 @@ export function Settings() {
           type: 'select',
           value: 'light',
           options: ['light', 'dark', 'system'],
-          description: 'Application theme preference',
+          description: 'Application theme preference'
         },
         {
           id: 'language',
@@ -115,24 +105,24 @@ export function Settings() {
           type: 'select',
           value: 'en',
           options: ['en', 'es', 'fr', 'de'],
-          description: 'Interface language',
-        },
-      ],
-    },
+          description: 'Interface language'
+        }
+      ]
+    }
   ]);
 
   const handleSettingChange = (sectionId: string, settingId: string, newValue: any) => {
-    setSettings((prevSettings) => {
-      return prevSettings.map((section) => {
+    setSettings(prevSettings => {
+      return prevSettings.map(section => {
         if (section.id === sectionId) {
           return {
             ...section,
-            settings: section.settings.map((setting) => {
+            settings: section.settings.map(setting => {
               if (setting.id === settingId) {
                 return { ...setting, value: newValue };
               }
               return setting;
-            }),
+            })
           };
         }
         return section;
@@ -160,7 +150,7 @@ export function Settings() {
             onChange={(e) => handleSettingChange(section.id, setting.id, e.target.value)}
             className="block w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {setting.options?.map((option) => (
+            {setting.options?.map(option => (
               <option key={option} value={option}>
                 {option.charAt(0).toUpperCase() + option.slice(1)}
               </option>
@@ -194,12 +184,14 @@ export function Settings() {
           {/* Settings Navigation */}
           <div className="md:w-1/4">
             <nav className="space-y-1">
-              {settings.map((section) => (
+              {settings.map(section => (
                 <button
                   key={section.id}
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    activeSection === section.id ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'
+                    activeSection === section.id
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'hover:bg-gray-50'
                   }`}
                 >
                   {section.icon}
@@ -212,12 +204,18 @@ export function Settings() {
           {/* Settings Content */}
           <div className="md:w-3/4">
             {settings
-              .find((section) => section.id === activeSection)
-              ?.settings.map((setting) => (
-                <div key={setting.id} className="mb-6 pb-6 border-b last:border-b-0 last:pb-0">
+              .find(section => section.id === activeSection)
+              ?.settings.map(setting => (
+                <div
+                  key={setting.id}
+                  className="mb-6 pb-6 border-b last:border-b-0 last:pb-0"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <label className="font-medium">{setting.label}</label>
-                    {renderSettingInput(settings.find((s) => s.id === activeSection)!, setting)}
+                    {renderSettingInput(
+                      settings.find(s => s.id === activeSection)!,
+                      setting
+                    )}
                   </div>
                   {setting.description && (
                     <p className="text-sm text-gray-500">{setting.description}</p>
@@ -231,7 +229,10 @@ export function Settings() {
         <div className="mt-6 flex justify-end">
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            onClick={() => {}}
+            onClick={() => {
+              // Here you would typically save settings to backend
+              console.log('Settings saved:', settings);
+            }}
           >
             Save Changes
           </button>

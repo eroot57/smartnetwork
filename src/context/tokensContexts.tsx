@@ -1,13 +1,11 @@
-import type { TokenAccount } from '@/utils/solana';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState } from "react";
+import { TokenAccount } from "@/utils/solana";
 
 export type CompressedTokenInfo = {
   mint: string;
   balance: number;
   compressed: boolean;
 };
-
-export type { TokenAccount };
 
 interface TokenContextType {
   solBalance: number;
@@ -23,7 +21,7 @@ const TokenContext = createContext<TokenContextType | undefined>(undefined);
 export const useTokens = () => {
   const context = useContext(TokenContext);
   if (!context) {
-    throw new Error('useTokens must be used within a TokenProvider');
+    throw new Error("useTokens must be used within a Token");
   }
   return context;
 };
@@ -33,10 +31,12 @@ export const TokenContextProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  useState('');
+  useState("");
   const [solBalance, setSolBalance] = useState(0);
   const [splTokenAccounts, setSplTokenAccounts] = useState<TokenAccount[]>([]);
-  const [compressedTokens, setCompressedTokens] = useState<CompressedTokenInfo[]>([]);
+  const [compressedTokens, setCompressedTokens] = useState<
+    CompressedTokenInfo[]
+  >([]);
 
   return (
     <TokenContext.Provider

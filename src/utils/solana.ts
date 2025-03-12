@@ -1,33 +1,24 @@
-import { getEnvironment, getRpcUrl } from '@/utils/environment';
-import { getLightRpc } from '@/utils/zkCompression';
+import { PublicKey, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-  createCloseAccountInstruction,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
   getAccount,
   getMint,
-} from '@solana/spl-token';
-import { Connection, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+  createCloseAccountInstruction,
+} from "@solana/spl-token";
+import { getLightRpc } from "@/utils/zkCompression";
+import { getRpcUrl, getEnvironment } from "@/utils/environment";
 
 const currentEnv = getEnvironment();
 
-export interface TokenAccount {
-  mint: string;
-
-  amount: number;
-
-  delegated_amount: number;
-
-  frozen: boolean;
-
-  owner: string;
-}
-
-export const formatAddress = (address = '') => {
+export const formatAddress = (address = "") => {
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 };
 
-export const formatAmount = (amount = 0, decimals = 9): string => {
+export const formatAmount = (
+  amount: number = 0,
+  decimals: number = 9
+): string => {
   // Calculate the formatted value by dividing the amount by 10^decimals
   const value = amount / 10 ** decimals;
 
@@ -38,26 +29,39 @@ export const formatAmount = (amount = 0, decimals = 9): string => {
   if (Math.abs(value) < EXPONENTIAL_THRESHOLD && value !== 0) {
     // Convert to exponential notation with up to 6 decimal places
     return value.toExponential(6);
+  } else {
+    // Convert to fixed-point notation with specified decimals
+    // Then remove any trailing zeros and the decimal point if not needed
+    return parseFloat(value.toFixed(decimals)).toString();
   }
-  // Convert to fixed-point notation with specified decimals
-  // Then remove any trailing zeros and the decimal point if not needed
-  return Number.parseFloat(value.toFixed(decimals)).toString();
 };
 
-export const getAddressExplorerUrl = (address = '') => {
-  return currentEnv === 'mainnet'
+export const getAddressExplorerUrl = (address = "") => {
+  return currentEnv === "mainnet"
     ? `https://explorer.solana.com/address/${address}`
     : `https://explorer.solana.com/address/${address}?cluster=devnet`;
 };
 
-export const getSignatureExplorerUrl = (signature = '') => {
-  return currentEnv === 'mainnet'
+export const getSignatureExplorerUrl = (signature = "") => {
+  return currentEnv === "mainnet"
     ? `https://explorer.solana.com/tx/${signature}`
     : `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
 };
 
-export const openExplorerUrl = (address = '', isTxn = false) => {
-  window.open(isTxn ? getSignatureExplorerUrl(address) : getAddressExplorerUrl(address), '_blank');
+export const openExplorerUrl = (address = "", isTxn = false) => {
+  window.open(
+    isTxn ? getSignatureExplorerUrl(address) : getAddressExplorerUrl(address),
+    "_blank"
+  );
+};
+
+export type TokenAccount = {
+  address: string;
+  amount: number;
+  delegated_amount: number;
+  frozen: boolean;
+  mint: string;
+  owner: string;
 };
 
 export const getAssociatedTokenAddress = ({
@@ -84,7 +88,7 @@ export const checkIfAtaExist = async ({
   owner: PublicKey;
   mint: PublicKey;
 }) => {
-  const _lightRpc = getLightRpc();
+  const lightRpc = getLightRpc();
 
   const ata = getAssociatedTokenAddress({
     owner,
@@ -97,13 +101,19 @@ export const checkIfAtaExist = async ({
       const connection = new Connection(getRpcUrl());
       await getAccount(connection, ata);
       hasAta = true;
-    } catch (_error: any) {}
+    } catch (error: any) {
+      // we assume the ata is not valid if we get an error
+      // create the ata here
+      console.log(
+        `No ATA found for ${mint.toBase58()} owned by ${owner.toBase58()}`
+      );
+    }
   }
   return { ata: ata as PublicKey, isValid: hasAta };
 };
 
 export const checkIfAccountExist = async (account: PublicKey) => {
-  const _lightRpc = getLightRpc();
+  const lightRpc = getLightRpc();
 
   let accountExist = false;
   if (account) {
@@ -112,21 +122,27 @@ export const checkIfAccountExist = async (account: PublicKey) => {
       await getAccount(connection, account);
       // Removed invalid getAccount call with lightRpc
       accountExist = true;
-    } catch (_error: any) {}
+    } catch (error: any) {
+      // we assume the ata is not valid if we get an error
+      // create the ata here
+      console.log(`Error getting account ${account.toBase58()}:`, error);
+    }
   }
   return accountExist;
 };
 
-export const fetchSplTokenAccounts = async (walletAddress: PublicKey): Promise<TokenAccount[]> => {
+export const fetchSplTokenAccounts = async (
+  walletAddress: PublicKey
+): Promise<TokenAccount[]> => {
   const response = await fetch(getRpcUrl(), {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'getTokenAccounts',
-      id: 'token-accounts',
+      jsonrpc: "2.0",
+      method: "getTokenAccounts",
+      id: "token-accounts",
       params: {
         page: 1,
         limit: 100,
@@ -138,16 +154,19 @@ export const fetchSplTokenAccounts = async (walletAddress: PublicKey): Promise<T
     }),
   });
   if (response.status === 429) {
-    throw new Error('Too many requests. Try again in a few seconds.');
+    throw new Error("Too many requests. Try again in a few seconds.");
   }
   if (!response.ok) {
-    throw new Error('Failed to fetch compressed token balances');
+    throw new Error("Failed to fetch compressed token balances");
   }
   const { result } = await response.json();
   return result?.token_accounts || [];
 };
 
-export const getSolBalance = async (connection: Connection, walletAddress: PublicKey) => {
+export const getSolBalance = async (
+  connection: Connection,
+  walletAddress: PublicKey
+) => {
   const solBalance = await connection.getBalance(walletAddress);
   return solBalance / LAMPORTS_PER_SOL;
 };
@@ -166,34 +185,40 @@ export const createCloseAccountIx = async ({
   );
 };
 
-export const getAccountRentBalance = async (connection: Connection, account: PublicKey) => {
+export const getAccountRentBalance = async (
+  connection: Connection,
+  account: PublicKey
+) => {
   try {
     const fetchedAccount = await getAccount(connection, account);
+    console.log("fetchedAccount", fetchedAccount);
     const rentReserve = fetchedAccount.rentExemptReserve;
+    console.log("rentReserve", rentReserve);
     if (!rentReserve) return 0;
-  } catch (_err) {
+  } catch (err) {
+    console.log("Error fetching account to check rent reserve", err);
     return 0;
   }
 };
 
 export const getTransactions = async (account: PublicKey): Promise<any[]> => {
   const response = await fetch(getRpcUrl(), {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      jsonrpc: '2.0',
-      method: 'getSignaturesForAddress',
-      id: 'wallet-sigs',
+      jsonrpc: "2.0",
+      method: "getSignaturesForAddress",
+      id: "wallet-sigs",
       params: [account.toBase58()],
     }),
   });
   if (response.status === 429) {
-    throw new Error('Too many requests. Try again in a few seconds.');
+    throw new Error("Too many requests. Try again in a few seconds.");
   }
   if (!response.ok) {
-    throw new Error('Failed to fetch compressed token balances');
+    throw new Error("Failed to fetch compressed token balances");
   }
   const transactions = await response.json();
   return transactions?.result || [];

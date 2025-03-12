@@ -1,5 +1,5 @@
 // src/services/crossmint.ts
-import type { BalanceResponse, TransactionResponse, WalletResponse } from '@/types/wallet';
+import { WalletResponse, BalanceResponse, TransactionResponse } from '@/types/wallet';
 
 const CROSSMINT_API_URL = 'https://staging.crossmint.com/api/v1-alpha2';
 
@@ -25,7 +25,7 @@ interface MintTokenResponse {
 }
 
 class CrossmintService {
-  mintToken(_arg0: { decimals: number; authority: string }) {
+  mintToken(arg0: { decimals: number; authority: string; }) {
     throw new Error('Method not implemented.');
   }
   private apiKey: string;
@@ -39,10 +39,8 @@ class CrossmintService {
   }
 
   async getTransactions(walletAddress: string): Promise<Transaction[]> {
-    const response = await this.fetchApi<TransactionResponse[]>(
-      `/wallets/${walletAddress}/transactions`
-    );
-    return response.map((tx) => ({
+    const response = await this.fetchApi<TransactionResponse[]>(`/wallets/${walletAddress}/transactions`);
+    return response.map(tx => ({
       id: tx.id,
       type: tx.fromAddress === walletAddress ? 'outgoing' : 'incoming',
       amount: tx.amount,
@@ -64,18 +62,21 @@ class CrossmintService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(params),
     });
     return response;
   }
 
-  private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async fetchApi<T>(
+    endpoint: string, 
+    options: RequestInit = {}
+  ): Promise<T> {
     const response = await fetch(`${CROSSMINT_API_URL}${endpoint}`, {
       ...options,
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...options.headers,
       },
@@ -98,7 +99,9 @@ class CrossmintService {
   }
 
   async getBalance(walletAddress: string): Promise<BalanceResponse> {
-    return this.fetchApi<BalanceResponse>(`/wallets/${walletAddress}/balances?currency=sol`);
+    return this.fetchApi<BalanceResponse>(
+      `/wallets/${walletAddress}/balances?currency=sol`
+    );
   }
 
   async sendTransaction(

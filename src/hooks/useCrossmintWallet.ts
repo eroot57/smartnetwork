@@ -1,11 +1,11 @@
-import { WALLET_CONSTANTS } from '@/config/constants';
-import { useAIAgent } from '@/hooks/useAIAgent';
-import { ErrorHandler } from '@/lib/utils/error-handling';
+// src/hooks/useCrossmintWallet.ts
+import { useState, useEffect, useCallback } from 'react';
 import { CrossmintWallet } from '@/lib/wallet/crossmint';
 import { TransactionManager } from '@/lib/wallet/transactions';
-import type { TransactionReceipt } from '@/lib/wallet/transactions';
-// src/hooks/useCrossmintWallet.ts
-import { useCallback, useEffect, useState } from 'react';
+import { ErrorHandler } from '@/lib/utils/error-handling';
+import { TransactionReceipt } from '@/lib/wallet/transactions';
+import { WALLET_CONSTANTS } from '@/config/constants';
+import { useAIAgent } from '@/hooks/useAIAgent';
 
 interface WalletBalance {
   currency: string;
@@ -37,11 +37,7 @@ interface UseCrossmintWalletReturn {
   // Actions
   initializeWallet: (config?: { linkedUser?: string }) => Promise<void>;
   refreshBalance: () => Promise<void>;
-  sendTransaction: (
-    to: string,
-    amount: number,
-    options?: TransactionOptions
-  ) => Promise<TransactionReceipt>;
+  sendTransaction: (to: string, amount: number, options?: TransactionOptions) => Promise<TransactionReceipt>;
   getTransactionHistory: (limit?: number) => Promise<any[]>;
 
   // Status
@@ -66,7 +62,7 @@ export function useCrossmintWallet(): UseCrossmintWalletReturn {
     balance: balance?.amount || '0',
     address: address || '',
     isLoading,
-    error,
+    error
   });
 
   // Initialize wallet
@@ -117,74 +113,71 @@ export function useCrossmintWallet(): UseCrossmintWalletReturn {
   }, [wallet, refreshBalance]);
 
   // Send transaction
-  const sendTransaction = useCallback(
-    async (to: string, amount: number, options?: TransactionOptions) => {
-      if (!wallet || !address) {
-        throw new Error('Wallet not initialized');
+  const sendTransaction = useCallback(async (
+    to: string,
+    amount: number,
+    options?: TransactionOptions
+  ) => {
+    if (!wallet || !address) {
+      throw new Error('Wallet not initialized');
+    }
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      // Analyze transaction with AI
+      const analysis = await analyzeTransaction(amount, to, options?.memo);
+      if (analysis.suggestion?.type === 'warning') {
+        throw new Error(`AI Warning: ${analysis.content}`);
       }
 
-      try {
-        setIsProcessing(true);
-        setError(null);
+      // Create transaction manager
+      const txManager = new TransactionManager(address);
 
-        // Analyze transaction with AI
-        const analysis = await analyzeTransaction(amount, to, options?.memo);
-        if (analysis.suggestion?.type === 'warning') {
-          throw new Error(`AI Warning: ${analysis.content}`);
-        }
+      // Send transaction
+      const receipt = await txManager.sendTransaction(to, amount, options);
 
-        // Create transaction manager
-        const txManager = new TransactionManager(address);
+      // Update pending transactions
+      setPendingTransactions(prev => new Map(prev.set(receipt.signature, {
+        status: 'pending',
+        timestamp: receipt.timestamp,
+        amount,
+        to
+      })));
 
-        // Send transaction
-        const receipt = await txManager.sendTransaction(to, amount, options);
+      // Refresh balance after transaction
+      await refreshBalance();
 
-        // Update pending transactions
-        setPendingTransactions(
-          (prev) =>
-            new Map(
-              prev.set(receipt.signature, {
-                status: 'pending',
-                timestamp: receipt.timestamp,
-                amount,
-                to,
-              })
-            )
-        );
-
-        // Refresh balance after transaction
-        await refreshBalance();
-
-        return receipt;
-      } catch (err) {
-        throw ErrorHandler.createError(
-          500,
-          'TRANSACTION_FAILED',
-          err instanceof Error ? err.message : 'Transaction failed'
-        );
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [wallet, address, analyzeTransaction, refreshBalance]
-  );
+      return receipt;
+    } catch (err) {
+      throw ErrorHandler.createError(
+        500,
+        'TRANSACTION_FAILED',
+        err instanceof Error ? err.message : 'Transaction failed'
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [wallet, address, analyzeTransaction, refreshBalance]);
 
   // Get transaction history
-  const getTransactionHistory = useCallback(
-    async (limit?: number) => {
-      if (!wallet || !address) {
-        throw new Error('Wallet not initialized');
-      }
+  const getTransactionHistory = useCallback(async (limit?: number) => {
+    if (!wallet || !address) {
+      throw new Error('Wallet not initialized');
+    }
 
-      try {
-        const txManager = new TransactionManager(address);
-        return await txManager.getTransactionHistory(limit);
-      } catch (_err) {
-        throw ErrorHandler.createError(500, 'NETWORK_ERROR', 'Failed to fetch transaction history');
-      }
-    },
-    [wallet, address]
-  );
+    try {
+      const txManager = new TransactionManager(address);
+      return await txManager.getTransactionHistory(limit);
+    } catch (err) {
+      throw ErrorHandler.createError(
+        500,
+        'NETWORK_ERROR',
+        'Failed to fetch transaction history'
+      );
+    }
+  }, [wallet, address]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -214,6 +207,6 @@ export function useCrossmintWallet(): UseCrossmintWalletReturn {
 
     // Status
     isProcessing,
-    pendingTransactions,
+    pendingTransactions
   };
 }

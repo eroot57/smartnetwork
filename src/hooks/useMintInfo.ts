@@ -1,95 +1,64 @@
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey } from '@solana/web3.js';
-// src/hooks/useMintInfo.ts
-import { useCallback, useEffect, useState } from 'react';
-import { useMemo } from 'react';
+import { useState, useEffect, useCallback } from "react";
+import { getMintInfo } from "@/utils/solana";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 
-interface MintInfo {
-  address: PublicKey;
-  decimals: number;
-  supply: bigint;
-  mintAuthority: PublicKey | null;
-  freezeAuthority: PublicKey | null;
-}
+type MintInfoHook = {
+  isFetchingMintInfo: boolean;
+  errorFetchingMintInfo: string | null;
+  mintInfo: any | null;
+  isAuthority: boolean;
+  clearMintInfo: () => void;
+  refetch: () => void;
+};
 
-export const useMintInfo = (mintAddress?: string) => {
+export const useMintInfo = (mint?: string | null): MintInfoHook => {
+  const { publicKey: connectedWallet } = useWallet();
   const { connection } = useConnection();
-  const { publicKey: walletPublicKey } = useWallet();
-
-  const [mintInfo, setMintInfo] = useState<MintInfo | null>(null);
   const [isFetchingMintInfo, setIsFetchingMintInfo] = useState(false);
-  const [errorFetchingMintInfo, setErrorFetchingMintInfo] = useState<string | null>(null);
-
-  const isAuthority = useMemo(() => {
-    if (!mintInfo || !walletPublicKey) return false;
-    return mintInfo.mintAuthority?.equals(walletPublicKey);
-  }, [mintInfo, walletPublicKey]);
+  const [errorFetchingMintInfo, setErrorFetchingMintInfo] = useState<
+    string | null
+  >(null);
+  const [mintInfo, setMintInfo] = useState<any>(null);
+  const [isAuthority, setIsAuthority] = useState(false);
 
   const fetchMintInfo = useCallback(async () => {
-    if (!mintAddress) return;
-
+    if (!mint || !connection || !connectedWallet) return;
     setIsFetchingMintInfo(true);
-    setErrorFetchingMintInfo(null);
-
+    setMintInfo(null);
+    setIsAuthority(false);
     try {
-      const mintPubkey = new PublicKey(mintAddress);
-      const info = await connection.getParsedAccountInfo(mintPubkey);
-
-      if (!info.value) {
-        throw new Error('Mint account not found');
-      }
-
-      const data = info.value.data;
-      if (!('parsed' in data)) {
-        throw new Error('Failed to parse mint account data');
-      }
-
-      const parsed = data.parsed;
-      if (parsed.type !== 'mint') {
-        throw new Error('Not a mint account');
-      }
-
-      const mintAuthority = parsed.info.mintAuthority
-        ? new PublicKey(parsed.info.mintAuthority)
-        : null;
-
-      const freezeAuthority = parsed.info.freezeAuthority
-        ? new PublicKey(parsed.info.freezeAuthority)
-        : null;
-
-      setMintInfo({
-        address: mintPubkey,
-        decimals: parsed.info.decimals,
-        supply: BigInt(parsed.info.supply),
-        mintAuthority,
-        freezeAuthority,
-      });
-    } catch (error) {
-      console.error('Error fetching mint info:', error);
-      setErrorFetchingMintInfo(
-        error instanceof Error ? error.message : 'Failed to fetch mint info'
+      const mintInfo = await getMintInfo(connection, mint);
+      setMintInfo(mintInfo);
+      setIsAuthority(
+        mintInfo?.mintAuthority?.toBase58() === connectedWallet.toBase58()
       );
+    } catch (error: any) {
+      setErrorFetchingMintInfo(error?.message || "Unknown error");
     } finally {
       setIsFetchingMintInfo(false);
     }
-  }, [connection, mintAddress]);
+  }, [mint, connection, connectedWallet]);
 
   useEffect(() => {
-    if (mintAddress) {
+    if (mint && connectedWallet && connection) {
       fetchMintInfo();
     }
-  }, [fetchMintInfo, mintAddress]);
+  }, [mint, connection, connectedWallet]);
 
-  const refreshMintInfo = useCallback(() => {
-    return fetchMintInfo();
-  }, [fetchMintInfo]);
+  const clearMintInfo = () => {
+    setMintInfo(null);
+    setIsAuthority(false);
+    setErrorFetchingMintInfo(null);
+    setIsFetchingMintInfo(false);
+  };
 
   return {
-    mintInfo,
     isFetchingMintInfo,
     errorFetchingMintInfo,
+    mintInfo,
     isAuthority,
-    refreshMintInfo,
+    refetch: fetchMintInfo,
+    clearMintInfo,
   };
 };

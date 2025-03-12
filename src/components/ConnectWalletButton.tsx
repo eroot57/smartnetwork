@@ -1,11 +1,15 @@
-import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { useToast } from '@/hooks/use-toast';
-import { useSolBalance } from '@/hooks/useSolBalance';
-import { formatAddress } from '@/utils/solana';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import { WalletMinimal } from 'lucide-react';
-import { useState } from 'react';
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { formatAddress } from "@/utils/solana";
+import { useSolBalance } from "@/hooks/useSolBalance";
+import { useState } from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverAnchor,
+} from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
+import { WalletMinimal } from "lucide-react";
 
 const WalletInfo = ({
   connectedWallet,
@@ -23,9 +27,13 @@ const WalletInfo = ({
     >
       <div className="flex items-center gap-1">
         <WalletMinimal strokeWidth={1.25} size={16} />
-        <p className="font-light text-gray-700">{formatAddress(connectedWallet)}</p>
+        <p className="font-light text-gray-700">
+          {formatAddress(connectedWallet)}
+        </p>
       </div>
-      <p className="text-sm font-thin text-gray-500 relative top-[-5px]">{balance} SOL</p>
+      <p className="text-sm font-thin text-gray-500 relative top-[-5px]">
+        {balance} SOL
+      </p>
     </button>
   );
 };
@@ -38,8 +46,8 @@ const WalletPopoverMenu = ({ closePopover }: { closePopover: () => void }) => {
     if (connectedWallet) {
       navigator.clipboard.writeText(connectedWallet.toBase58());
       toast({
-        title: 'Copied to clipboard',
-        description: 'Wallet address has been copied to your clipboard',
+        title: "Copied to clipboard",
+        description: "Wallet address has been copied to your clipboard",
       });
       closePopover();
     }
@@ -76,7 +84,10 @@ const ConnectWalletButton = () => {
 
   if (connectedWallet) {
     return (
-      <Popover open={isPopoverOpen} onOpenChange={() => setIsPopoverOpen(false)}>
+      <Popover
+        open={isPopoverOpen}
+        onOpenChange={() => setIsPopoverOpen(false)}
+      >
         <PopoverAnchor className="flex items-center justify-center">
           <WalletInfo
             connectedWallet={connectedWallet.toBase58()}

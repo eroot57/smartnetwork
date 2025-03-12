@@ -1,9 +1,9 @@
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { WalletState } from '@/types/wallet';
-import { Coins, ExternalLink, RefreshCw, Search } from 'lucide-react';
 // src/components/wallet/TokenManager.tsx
 import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Coins, Search, ExternalLink, RefreshCw } from 'lucide-react';
+import { WalletState } from '@/types/wallet';
 
 interface TokenBalance {
   mint: string;
@@ -67,16 +67,18 @@ export function TokenManager({ walletState }: TokenManagerProps) {
       rawTokens.map(async (token) => {
         try {
           // Fetch token metadata using Jupiter API
-          const metadataResponse = await fetch(`https://price.jup.ag/v4/token/${token.mint}`);
+          const metadataResponse = await fetch(
+            `https://price.jup.ag/v4/token/${token.mint}`
+          );
           const metadata = await metadataResponse.json();
 
           return {
             mint: token.mint,
             symbol: metadata.data.symbol,
             name: metadata.data.name,
-            balance: (Number(token.amount) / 10 ** token.decimals).toString(),
+            balance: (Number(token.amount) / Math.pow(10, token.decimals)).toString(),
             decimals: token.decimals,
-            usdValue: metadata.data.price * (Number(token.amount) / 10 ** token.decimals),
+            usdValue: metadata.data.price * (Number(token.amount) / Math.pow(10, token.decimals)),
             icon: metadata.data.logoURI,
             priceChange24h: metadata.data.priceChange24h,
           };
@@ -86,7 +88,7 @@ export function TokenManager({ walletState }: TokenManagerProps) {
             mint: token.mint,
             symbol: 'Unknown',
             name: 'Unknown Token',
-            balance: (Number(token.amount) / 10 ** token.decimals).toString(),
+            balance: (Number(token.amount) / Math.pow(10, token.decimals)).toString(),
             decimals: token.decimals,
             usdValue: 0,
           };
@@ -104,10 +106,9 @@ export function TokenManager({ walletState }: TokenManagerProps) {
     setRefreshing(false);
   };
 
-  const filteredTokens = tokens.filter(
-    (token) =>
-      token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTokens = tokens.filter(token => 
+    token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatUSD = (value: number) => {
@@ -153,7 +154,7 @@ export function TokenManager({ walletState }: TokenManagerProps) {
 
         {isLoading ? (
           <div className="text-center py-8">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto" />
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
             <p className="mt-2 text-gray-500">Loading tokens...</p>
           </div>
         ) : filteredTokens.length === 0 ? (
@@ -188,16 +189,13 @@ export function TokenManager({ walletState }: TokenManagerProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">{Number.parseFloat(token.balance).toFixed(4)}</p>
+                  <p className="font-medium">{parseFloat(token.balance).toFixed(4)}</p>
                   <p className="text-sm text-gray-500">{formatUSD(token.usdValue)}</p>
                   {token.priceChange24h && (
-                    <p
-                      className={`text-xs ${
-                        token.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {token.priceChange24h > 0 ? '+' : ''}
-                      {token.priceChange24h.toFixed(2)}%
+                    <p className={`text-xs ${
+                      token.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'
+                    }`}>
+                      {token.priceChange24h > 0 ? '+' : ''}{token.priceChange24h.toFixed(2)}%
                     </p>
                   )}
                 </div>

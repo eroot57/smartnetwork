@@ -1,162 +1,73 @@
-import { useToast } from '@/hooks/use-toast';
-import { CrossmintWalletsAPI } from '@/wallets/crossmint/wallets/CrossmintWalletsAPI';
-import {
-  type CustodialSolanaWalletClient,
-  custodialFactory,
-} from '@/wallets/crossmint/wallets/CustodialSolanaWalletClient';
-import { CrossmintApiClient } from '@crossmint/common-sdk-base';
-import { Connection, PublicKey } from '@solana/web3.js';
-import {
-  type PropsWithChildren,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import { WalletContext, WalletContextState } from './walletContext';
+import { PublicKey, Connection, Keypair, Transaction, SystemProgram } from '@solana/web3.js';
+import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 
-type SupportedChain = 'solana';
-
-interface WalletContextState {
-  publicKey: PublicKey | null;
-  connected: boolean;
-  connecting: boolean;
-  disconnect: () => Promise<void>;
-  connect: () => Promise<void>;
-  select: (chain: SupportedChain) => void;
-  currentChain: SupportedChain;
-  availableChains: SupportedChain[];
-  walletClient: CustodialSolanaWalletClient | null;
-}
-
-const WalletContext = createContext<WalletContextState | null>(null);
-
-export function WalletProvider({ children }: PropsWithChildren) {
-  const { toast } = useToast();
-  const [currentChain, setCurrentChain] = useState<SupportedChain>('solana');
-  const [currentWallet, setCurrentWallet] = useState<CustodialSolanaWalletClient | null>(null);
+const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [publicKey, setPublicKey] = useState<PublicKey | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [connecting, setConnecting] = useState(false);
+  const [connected, setConnected] = useState<boolean>(false);
+  const [connecting, setConnecting] = useState<boolean>(false);
 
-  // Initialize Solana connection and Crossmint client
-  const { connection, crossmintClient } = useMemo(() => {
-    const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_HOST!, {
-      commitment: 'confirmed',
-    });
-
-    const crossmintClient = new CrossmintApiClient(
-      { apiKey: process.env.NEXT_PUBLIC_CROSSMINT_API_KEY! },
-      {
-        internalConfig: {
-          sdkMetadata: {
-            name: '',
-            version: '',
-          },
-        },
-      }
-    );
-
-    return { connection, crossmintClient };
+  const connect = useCallback(async () => {
+    // Implement your connect logic here
   }, []);
 
-  // Initialize wallet clients
-  const initializeWallet = useMemo(async () => {
-    const createCustodialWallet = custodialFactory(crossmintClient);
+  const disconnect = useCallback(async () => {
+    // Implement your disconnect logic here
+  }, []);
 
-    try {
-      const wallet = await createCustodialWallet({
-        chain: 'solana',
-        connection,
-        email: process.env.NEXT_PUBLIC_WALLET_EMAIL || '', // Or however you want to identify the wallet
-      });
+  const select = useCallback((walletName: string) => {
+    // Implement your select logic here
+  }, []);
 
-      return wallet;
-    } catch (error) {
-      console.error('Failed to initialize wallet:', error);
-      return null;
+  const createMint = useCallback(async (decimals = 0, authority?: string): Promise<PublicKey> => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
     }
-  }, [connection, crossmintClient]);
 
-  // Connect wallet
-  const connect = async () => {
-    if (connecting) return;
+    const connection = new Connection('https://api.testnet.solana.com');
+    const mint = Keypair.generate();
+    const transaction = new Transaction().add(
+      SystemProgram.createAccount({
+        fromPubkey: publicKey,
+        newAccountPubkey: mint.publicKey,
+        lamports: await connection.getMinimumBalanceForRentExemption(82),
+        space: 82,
+        programId: SystemProgram.programId,
+      })
+    );
+    // Sign and send the transaction
+    // Add your logic to sign and send the transaction
 
-    try {
-      setConnecting(true);
-      const wallet = await initializeWallet;
+    return mint.publicKey;
+  }, [publicKey]);
 
-      if (!wallet) {
-        throw new Error('Failed to initialize wallet');
-      }
-
-      const address = wallet.getAddress();
-      if (address) {
-        setPublicKey(new PublicKey(address));
-        setCurrentWallet(wallet);
-        setConnected(true);
-      }
-
-      toast({
-        title: 'Wallet Connected',
-        description: 'Successfully connected to your wallet.',
-      });
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      toast({
-        title: 'Connection Failed',
-        description: 'Failed to connect to wallet.',
-        variant: 'destructive',
-      });
-    } finally {
-      setConnecting(false);
-    }
-  };
-
-  // Disconnect wallet
-  const disconnect = async () => {
-    try {
-      setPublicKey(null);
-      setCurrentWallet(null);
-      setConnected(false);
-      toast({
-        title: 'Wallet Disconnected',
-        description: 'Successfully disconnected from your wallet.',
-      });
-    } catch (error) {
-      console.error('Failed to disconnect wallet:', error);
-      toast({
-        title: 'Disconnection Failed',
-        description: 'Failed to disconnect from wallet.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Select chain
-  const select = (chain: SupportedChain) => {
-    setCurrentChain(chain);
-  };
-
-  const value: WalletContextState = {
+  const value: WalletContextState = useMemo(() => ({
     publicKey,
     connected,
     connecting,
-    disconnect,
     connect,
+    disconnect,
     select,
-    currentChain,
-    availableChains: ['solana'],
-    walletClient: currentWallet,
-  };
+    createMint,
+  }), [publicKey, connected, connecting, connect, disconnect, select, createMint]);
 
-  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
-}
+  const network = WalletAdapterNetwork.Testnet;
+  const endpoint = useMemo(() => 'https://api.testnet.solana.com', []);
 
-export const useWallet = () => {
-  const context = useContext(WalletContext);
-  if (!context) {
-    throw new Error('useWallet must be used within WalletProvider');
-  }
-  return context;
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <SolanaWalletProvider wallets={[]} autoConnect>
+        <WalletModalProvider>
+          <WalletContext.Provider value={value}>
+            {children}
+          </WalletContext.Provider>
+        </WalletModalProvider>
+      </SolanaWalletProvider>
+    </ConnectionProvider>
+  );
 };
+
+export default WalletProvider;

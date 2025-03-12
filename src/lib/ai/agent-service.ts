@@ -1,8 +1,8 @@
-import { ErrorHandler } from '@/lib/utils/error-handling';
-import { apiService } from '@/services/api';
 // src/lib/ai/agent-service.ts
 //import { Agent } from '@a16z/eliza';
-import type { WalletState } from '@/types/wallet';
+import { WalletState } from '@/types/wallet';
+import { ErrorHandler } from '@/lib/utils/error-handling';
+import { apiService } from '@/services/api';
 import { Agent } from './agent';
 //import { Agent } from '@solanagaentkit';
 
@@ -27,7 +27,7 @@ export interface MarketInsights {
 
 interface AgentContext {
   walletState: WalletState;
-  recentTransactions?: any[];
+  recentTransactions?: Array<any>;
   userPreferences?: UserPreferences;
   marketData?: MarketData;
 }
@@ -58,8 +58,8 @@ class AIAgentService {
         analytical: 0.9,
         cautious: 0.8,
         helpful: 0.9,
-        professional: 0.85,
-      },
+        professional: 0.85
+      }
     });
 
     this.context = {
@@ -70,8 +70,8 @@ class AIAgentService {
         error: null,
         publicKey: null,
         connected: false,
-        connecting: false,
-      },
+        connecting: false
+      }
     };
 
     this.initializePrompts();
@@ -79,9 +79,7 @@ class AIAgentService {
 
   private initializePrompts() {
     this.prompts = new Map([
-      [
-        'transactionAnalysis',
-        `
+      ['transactionAnalysis', `
         Analyze the following transaction:
         Amount: {amount} SOL
         Recipient: {recipient}
@@ -90,30 +88,23 @@ class AIAgentService {
         Recent Transactions: {recentTransactions}
         
         Provide a risk assessment and recommendation.
-      `,
-      ],
-      [
-        'marketAnalysis',
-        `
+      `],
+      ['marketAnalysis', `
         Analyze current market conditions:
         SOL Price: ${this.context.marketData?.solPrice}
         Market Trend: ${this.context.marketData?.marketTrend}
         Volatility Index: ${this.context.marketData?.volatilityIndex}
         
         Provide market insights and opportunities.
-      `,
-      ],
-      [
-        'portfolioAdvice',
-        `
+      `],
+      ['portfolioAdvice', `
         Based on the user's:
         Risk Tolerance: {riskTolerance}
         Investment Style: {investmentStyle}
         Current Holdings: {holdings}
         
         Provide portfolio optimization advice.
-      `,
-      ],
+      `]
     ]);
   }
 
@@ -135,7 +126,7 @@ class AIAgentService {
       this.context.marketData = {
         solPrice: (data as any).price,
         marketTrend: (data as any).trend,
-        volatilityIndex: (data as any).volatility,
+        volatilityIndex: (data as any).volatility
       };
     } catch (error) {
       console.error('Failed to update market data:', error);
@@ -143,9 +134,9 @@ class AIAgentService {
   }
 
   public async analyzeTransaction(
-    _amount: number,
-    _recipient: string,
-    _purpose: string
+    amount: number,
+    recipient: string,
+    purpose: string
   ): Promise<AgentResponse> {
     // Implementation
     return {
@@ -156,8 +147,8 @@ class AIAgentService {
         opportunity: 0.7,
         recommendation: 'Proceed with caution',
         factors: ['Factor 1', 'Factor 2'],
-        suggestion: 'Consider alternative options',
-      },
+        suggestion: 'Consider alternative options'
+      }
     };
   }
 
@@ -170,34 +161,33 @@ class AIAgentService {
         opportunity: 0.8,
         recommendation: 'Invest',
         factors: ['Factor 1', 'Factor 2'],
-        suggestion: 'Consider long-term investment',
-      },
+        suggestion: 'Consider long-term investment'
+      }
     };
   }
 
   public async getPortfolioAdvice(): Promise<AgentResponse> {
     try {
-      const prompt = this.prompts
-        .get('portfolioAdvice')
-        ?.replace('{riskTolerance}', this.context.userPreferences?.riskTolerance || 'medium')
+      const prompt = this.prompts.get('portfolioAdvice')!
+        .replace('{riskTolerance}', this.context.userPreferences?.riskTolerance || 'medium')
         .replace('{investmentStyle}', this.context.userPreferences?.investmentStyle || 'moderate')
         .replace('{holdings}', JSON.stringify(this.context.walletState));
 
       const response = await this.agent.process({
         type: 'analysis',
         content: prompt,
-        context: this.context,
+        context: this.context
       });
 
       return this.processAgentResponse(response);
-    } catch (_error) {
+    } catch (error) {
       throw ErrorHandler.createError(500, 'AI_ERROR', 'Failed to get portfolio advice');
     }
   }
 
   private processAgentResponse(response: any): AgentResponse {
     // Extract suggestions and analysis from response content
-    const _suggestion = this.extractSuggestion(response.content);
+    const suggestion = this.extractSuggestion(response.content);
     const analysis = this.extractAnalysis(response.content);
 
     return {
@@ -208,8 +198,8 @@ class AIAgentService {
         opportunity: analysis?.opportunity || 0,
         recommendation: analysis?.recommendation || '',
         factors: analysis?.factors || [],
-        suggestion: analysis?.suggestion || '',
-      },
+        suggestion: analysis?.suggestion || ''
+      }
     };
   }
 
@@ -220,7 +210,7 @@ class AIAgentService {
       if (suggestionMatch) {
         return {
           type: this.determineSuggestionType(suggestionMatch[1]),
-          action: suggestionMatch[1],
+          action: suggestionMatch[1]
         };
       }
     }
@@ -237,19 +227,17 @@ class AIAgentService {
 
     if (riskMatch || opportunityMatch || recommendationMatch || factorsMatch || suggestionMatch) {
       return {
-        risk: riskMatch ? Number.parseInt(riskMatch[1]) : 0,
-        opportunity: opportunityMatch ? Number.parseInt(opportunityMatch[1]) : 0,
+        risk: riskMatch ? parseInt(riskMatch[1]) : 0,
+        opportunity: opportunityMatch ? parseInt(opportunityMatch[1]) : 0,
         recommendation: recommendationMatch ? recommendationMatch[1] : '',
         factors: factorsMatch ? factorsMatch[1].split(', ') : [],
-        suggestion: suggestionMatch ? suggestionMatch[1] : '',
+        suggestion: suggestionMatch ? suggestionMatch[1] : ''
       };
     }
     return undefined;
   }
 
-  private determineSuggestionType(
-    suggestion: string
-  ): 'transaction' | 'swap' | 'stake' | 'warning' {
+  private determineSuggestionType(suggestion: string): 'transaction' | 'swap' | 'stake' | 'warning' {
     if (suggestion.toLowerCase().includes('transaction')) return 'transaction';
     if (suggestion.toLowerCase().includes('swap')) return 'swap';
     if (suggestion.toLowerCase().includes('stake')) return 'stake';
@@ -258,12 +246,9 @@ class AIAgentService {
 
   public updateUserPreferences(preferences: Partial<UserPreferences>) {
     this.context.userPreferences = {
-      riskTolerance:
-        preferences.riskTolerance || this.context.userPreferences?.riskTolerance || 'medium',
-      investmentStyle:
-        preferences.investmentStyle || this.context.userPreferences?.investmentStyle || 'moderate',
-      aiPersonality:
-        preferences.aiPersonality || this.context.userPreferences?.aiPersonality || 'professional',
+      riskTolerance: preferences.riskTolerance || this.context.userPreferences?.riskTolerance || 'medium',
+      investmentStyle: preferences.investmentStyle || this.context.userPreferences?.investmentStyle || 'moderate',
+      aiPersonality: preferences.aiPersonality || this.context.userPreferences?.aiPersonality || 'professional'
     };
   }
 }

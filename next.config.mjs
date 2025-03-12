@@ -8,7 +8,7 @@ const nextConfig = {
   typescript: {
     // Allow production builds with type issues during development
     ignoreBuildErrors: process.env.DISABLE_ESLINT_PLUGIN === 'true',
-  },
+  }
 };
 
 export default nextConfig;

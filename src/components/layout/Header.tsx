@@ -1,9 +1,17 @@
-import { useCrossmintWallet } from '@/hooks/useCrossmintWallet';
-import { formatUtils } from '@/lib/utils/format';
-import { BarChart2, Menu, Moon, Settings, Sun, Wallet, X } from 'lucide-react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React from 'react';
+import { 
+  Wallet, 
+  Menu, 
+  X, 
+  Sun, 
+  Moon,
+  Settings,
+  BarChart2
+} from 'lucide-react';
+import { useCrossmintWallet } from '@/hooks/useCrossmintWallet';
+import { formatUtils } from '@/lib/utils/format';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -27,10 +35,7 @@ export function Header() {
       <div className="container px-4 mx-auto">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <div
-            onClick={() => router.push('/')}
-            className="flex items-center space-x-2 cursor-pointer"
-          >
+          <div onClick={() => router.push('/')} className="flex items-center space-x-2 cursor-pointer">
             <Wallet className="h-6 w-6" />
             <span className="font-bold">AI Solana Wallet</span>
           </div>
@@ -55,7 +60,9 @@ export function Header() {
           <div className="flex items-center space-x-4">
             {address && (
               <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-secondary rounded-full">
-                <span className="text-sm font-medium">{formatUtils.formatAddress(address)}</span>
+                <span className="text-sm font-medium">
+                  {formatUtils.formatAddress(address)}
+                </span>
                 {!isLoading && (
                   <span className="text-sm text-muted-foreground">
                     {formatUtils.formatSOL(balance ? balance.toString() : '0')} SOL

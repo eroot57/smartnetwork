@@ -1,14 +1,13 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader } from '@/components/ui/loader';
-import { useToast } from '@/hooks/use-toast';
-import { PublicKey } from '@solana/web3.js';
-import { useContext, useState } from 'react';
-import { WalletContext, type WalletContextState } from '../context/walletContext';
-
-import MintCreatedModal from '@/components/modals/MintCreatedModal';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useState, useContext } from "react";
+import { PublicKey } from "@solana/web3.js";
+import { Loader } from "@/components/ui/loader";
+import { useToast } from "@/hooks/use-toast";
+import { WalletContext, WalletContextState } from '../context/walletContext';
+import { MintCreatedModal } from "@/components/modals/MintCreatedSuccess";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 type Props = {
   onSubmit?: () => void;
@@ -18,7 +17,7 @@ const CreateMint = ({ onSubmit }: Props) => {
   const { publicKey: connectedWallet } = useWallet();
   const { toast } = useToast();
   const { createMint } = useContext(WalletContext) as WalletContextState;
-  const [authority, setAuthority] = useState(connectedWallet?.toBase58() || '');
+  const [authority, setAuthority] = useState(connectedWallet?.toBase58() || "");
   const [decimals, setDecimals] = useState<number>(9);
   const [isCreating, setIsCreating] = useState(false);
   const [newMintAddress, setNewMintAddress] = useState<string | null>(null);
@@ -27,21 +26,30 @@ const CreateMint = ({ onSubmit }: Props) => {
 
   const handleCreateMint = async () => {
     if (!canSend) return;
-    setIsCreating(true);
     try {
-      const mintAddress = await createMint(decimals, authority);
-      setNewMintAddress(mintAddress.toBase58());
+      setIsCreating(true);
+      const newMint = await createMint();
+      const newMintAddress = newMint.toBase58();
+      setNewMintAddress(newMintAddress);
+      onSubmit?.();
       toast({
-        title: 'Mint Created',
-        description: `Mint address: ${mintAddress.toBase58()}`,
+        title: "Success",
+        description: "Mint created successfully",
+        variant: "default",
       });
-      if (onSubmit) onSubmit();
-    } catch (error) {
+    } catch (error: any) {
+      const isInsufficientBalance = error?.message
+        ?.toLowerCase()
+        .includes("not enough balance");
+      
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create mint',
-        variant: 'destructive',
+        title: isInsufficientBalance ? "Insufficient balance" : "Error",
+        description: isInsufficientBalance 
+          ? "You do not have enough balance to create mint" 
+          : "An error occurred while creating mint",
+        variant: "destructive",
       });
+      console.error('Failed to create mint:', error);
     } finally {
       setIsCreating(false);
     }
@@ -50,7 +58,9 @@ const CreateMint = ({ onSubmit }: Props) => {
   if (!connectedWallet) {
     return (
       <div className="flex justify-center items-center">
-        <p className="text-gray-500 font-thin">Connect your wallet to create a mint</p>
+        <p className="text-gray-500 font-thin">
+          Connect your wallet to create a mint
+        </p>
       </div>
     );
   }
@@ -59,7 +69,9 @@ const CreateMint = ({ onSubmit }: Props) => {
     <>
       <div className="flex justify-center w-full">
         <div className="max-w-md flex-1">
-          <h1 className="text-4xl font-semibold text-gray-700 pb-7 w-full">Create Mint</h1>
+          <h1 className="text-4xl font-semibold text-gray-700 pb-7 w-full">
+            Create Mint
+          </h1>
           <div className="pb-5 space-y-4">
             <div>
               <Label>Decimals</Label>
@@ -72,7 +84,7 @@ const CreateMint = ({ onSubmit }: Props) => {
                 min={0}
                 max={9}
                 onChange={(e) => {
-                  const value = Number.parseInt(e.target.value);
+                  const value = parseInt(e.target.value);
                   if (value >= 0 && value <= 9) {
                     setDecimals(value);
                   }
@@ -106,9 +118,9 @@ const CreateMint = ({ onSubmit }: Props) => {
         </div>
       </div>
       <MintCreatedModal
-        open={!!newMintAddress}
+        isOpen={!!newMintAddress}
         onClose={() => setNewMintAddress(null)}
-        mintAddress={newMintAddress || ''}
+        mintAddress={newMintAddress || ""}
       />
     </>
   );

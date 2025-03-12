@@ -1,7 +1,7 @@
-import { WALLET_CONSTANTS } from '@/config/constants';
-import { ErrorHandler } from '@/lib/utils/error-handling';
 // src/lib/wallet/crossmint.ts
-import { type ApiRequestConfig, apiService } from '@/services/api';
+import { apiService, ApiRequestConfig } from '@/services/api';
+import { ErrorHandler } from '@/lib/utils/error-handling';
+import { WALLET_CONSTANTS } from '@/config/constants';
 
 interface CrossmintWalletConfig {
   linkedUser?: string;
@@ -56,8 +56,8 @@ export class CrossmintWallet {
         body: {
           type: config?.type || 'solana-custodial-wallet',
           linkedUser: config?.linkedUser,
-          labels: config?.labels,
-        },
+          labels: config?.labels
+        }
       };
 
       const response = await apiService.sendRequest<WalletResponse>(requestConfig);
@@ -67,35 +67,34 @@ export class CrossmintWallet {
       }
 
       return new CrossmintWallet(response.address);
-    } catch (_error) {
+    } catch (error) {
       throw ErrorHandler.createError(500, 'WALLET_CREATION_FAILED', 'Failed to create wallet');
     }
   }
 
   public async getBalance(forceUpdate = false): Promise<WalletBalance> {
     const now = new Date();
-    const shouldUpdate =
-      forceUpdate ||
-      now.getTime() - this.lastBalanceUpdate.getTime() > WALLET_CONSTANTS.INTERVALS.BALANCE_REFRESH;
+    const shouldUpdate = forceUpdate || 
+      (now.getTime() - this.lastBalanceUpdate.getTime() > WALLET_CONSTANTS.INTERVALS.BALANCE_REFRESH);
 
     if (shouldUpdate) {
       try {
         const requestConfig: ApiRequestConfig = {
           method: 'GET',
-          path: `/wallets/${this.address}/balance`,
+          path: `/wallets/${this.address}/balance`
         };
 
         const response = await apiService.sendRequest<BalanceResponse>(requestConfig);
-
+        
         const balance: WalletBalance = {
           currency: response.currency,
           amount: response.amount,
-          usdValue: response.usdValue,
+          usdValue: response.usdValue
         };
 
         this.balances.set('SOL', balance);
         this.lastBalanceUpdate = now;
-      } catch (_error) {
+      } catch (error) {
         throw ErrorHandler.createError(500, 'BALANCE_FETCH_FAILED', 'Failed to fetch balance');
       }
     }
@@ -107,25 +106,21 @@ export class CrossmintWallet {
     try {
       const requestConfig: ApiRequestConfig = {
         method: 'GET',
-        path: `/wallets/${this.address}/tokens`,
+        path: `/wallets/${this.address}/tokens`
       };
 
       const response = await apiService.sendRequest<TokenBalanceResponse>(requestConfig);
-
-      return response.tokens.map((token) => ({
+      
+      return response.tokens.map(token => ({
         tokenAddress: token.tokenAddress,
         symbol: token.symbol,
         decimals: token.decimals,
         currency: token.currency,
         amount: token.amount,
-        usdValue: token.usdValue,
+        usdValue: token.usdValue
       }));
-    } catch (_error) {
-      throw ErrorHandler.createError(
-        500,
-        'TOKEN_BALANCE_FETCH_FAILED',
-        'Failed to fetch token balances'
-      );
+    } catch (error) {
+      throw ErrorHandler.createError(500, 'TOKEN_BALANCE_FETCH_FAILED', 'Failed to fetch token balances');
     }
   }
 

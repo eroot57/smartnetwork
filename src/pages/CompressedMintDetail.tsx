@@ -1,129 +1,57 @@
-// src/pages/[mint]/page.tsx
-'use client';
+import { useMintInfo } from "@/hooks/useMintInfo";
+import { useParams } from "react-router-dom";
+import { Loader } from "@/components/ui/loader";
 
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { Button } from '@/components/ui/button';
-import { Loader } from '@/components/ui/loader';
-import { useMintInfo } from '@/hooks/useMintInfo';
-import { PublicKey } from '@solana/web3.js';
-import { ArrowLeft } from 'lucide-react';
-import { useParams, useSearchParams } from 'next/navigation';
-import { useRouter } from 'next/router';
-import { useCallback } from 'react';
-
-interface MintDetailContentProps {
-  mint: string;
-}
-
-const MintDetailContent = ({ mint }: MintDetailContentProps) => {
-  const { isFetchingMintInfo, errorFetchingMintInfo, mintInfo, isAuthority } = useMintInfo(mint);
-  const router = useRouter();
-
-  const goBack = useCallback(() => {
-    router.back();
-  }, [router]);
-
-  const renderMintInfo = () => {
-    if (!mintInfo) return null;
-
-    const infoFields = [
-      {
-        label: 'Address',
-        value: mintInfo.address?.toBase58() || 'N/A',
-      },
-      {
-        label: 'Decimals',
-        value: mintInfo.decimals?.toString() || 'N/A',
-      },
-      {
-        label: 'Supply',
-        value: mintInfo.supply?.toString() || 'N/A',
-      },
-      {
-        label: 'Mint Authority',
-        value: isAuthority ? 'You' : mintInfo.mintAuthority?.toBase58() || 'N/A',
-      },
-    ];
-
-    return (
-      <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
-        {infoFields.map((field) => (
-          <div key={field.label} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-            <p className="text-sm font-medium text-gray-800">{field.label}</p>
-            <p className="text-base font-light text-gray-600 break-all mt-1">{field.value}</p>
-          </div>
-        ))}
-      </div>
-    );
-  };
+const CompressedMintDetail = () => {
+  const { mint } = useParams();
+  const { isFetchingMintInfo, errorFetchingMintInfo, mintInfo, isAuthority } =
+    useMintInfo(mint);
 
   if (isFetchingMintInfo) {
     return (
-      <div className="flex justify-center items-center flex-col min-h-[200px]">
+      <div className="flex justify-center items-center flex-col">
         <Loader className="w-6 h-6 text-gray-600" />
-        <p className="text-gray-500 text-sm mt-2">Fetching Mint Info...</p>
+        <p className="text-gray-500 text-xs">Fetching Mint Info...</p>
       </div>
     );
   }
 
   if (errorFetchingMintInfo) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500 font-light mb-4">Error fetching mint info</p>
-        <Button variant="outline" onClick={goBack} className="text-gray-600 hover:text-gray-800">
-          Go Back
-        </Button>
-      </div>
+      <p className="text-red-500 text-center font-light">
+        Error fetching mint info
+      </p>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={goBack} className="mb-4 text-gray-600 hover:text-gray-800">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        <h1 className="text-3xl font-semibold text-gray-800">Mint Details</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Viewing details for mint {mint.slice(0, 8)}...{mint.slice(-8)}
-        </p>
+    <div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-semibold text-gray-700 pb-7">
+          Mint Detail
+        </h1>
       </div>
-
-      {renderMintInfo()}
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-gray-800">Address</p>
+          <p className="text-gray-500 font-light">{mintInfo?.address?.toBase58()}</p>
+        </div>
+        <div>
+          <p className="text-gray-800">Decimals</p>
+          <p className="text-gray-500 font-light">{mintInfo?.decimals}</p>
+        </div>
+        <div>
+          <p className="text-gray-800">Supply</p>
+          <p className="text-gray-500 font-light">{mintInfo?.supply?.toString()}</p>
+        </div>
+        <div>
+          <p className="text-gray-800">Mint Authority</p>
+          <p className="text-gray-500 font-light">
+            {isAuthority ? "You" : mintInfo?.mintAuthority?.toBase58()}
+          </p>
+        </div>
+      </div>
     </div>
-  );
-};
-
-const CompressedMintDetail = () => {
-  // Get mint from route params
-  const params = useParams();
-  const mintAddress = params && typeof params.mint === 'string' ? params.mint : '';
-
-  // Validate mint address
-  const isValidMint = useCallback(() => {
-    try {
-      if (!mintAddress) return false;
-      new PublicKey(mintAddress);
-      return true;
-    } catch {
-      return false;
-    }
-  }, [mintAddress]);
-
-  if (!isValidMint()) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500 font-light">Invalid mint address</p>
-      </div>
-    );
-  }
-
-  return (
-    <ErrorBoundary>
-      <MintDetailContent mint={mintAddress} />
-    </ErrorBoundary>
   );
 };
 

@@ -1,10 +1,9 @@
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { WalletAI } from '@/lib/ai/agent';
 import { WalletBalance } from '@/types/wallet';
-import type React from 'react';
-import { useState } from 'react';
 import { Loader } from '../ui/loader';
 
 interface SendTransactionProps {
@@ -14,12 +13,7 @@ interface SendTransactionProps {
   error: string | null;
 }
 
-const SendTransaction: React.FC<SendTransactionProps> = ({
-  balance,
-  address,
-  isLoading,
-  error,
-}) => {
+const SendTransaction: React.FC<SendTransactionProps> = ({ balance, address, isLoading, error }) => {
   const [amount, setAmount] = useState<string>('');
   const [recipient, setRecipient] = useState<string>('');
   const [isSending, setIsSending] = useState<boolean>(false);
@@ -44,12 +38,13 @@ const SendTransaction: React.FC<SendTransactionProps> = ({
           variant: 'default',
         });
       }
-    } catch (_error: any) {
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'An error occurred while sending the transaction',
         variant: 'destructive',
       });
+      console.log('error: ', error);
     } finally {
       setIsSending(false);
     }

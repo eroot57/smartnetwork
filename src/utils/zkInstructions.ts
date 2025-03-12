@@ -1,38 +1,42 @@
-import { checkIfAccountExist, checkIfAtaExist, getAssociatedTokenAddress } from '@/utils/solana';
 import {
-  deriveCpiAuthorityPda,
-  deriveTokenPoolPda,
-  getCompressedMintProgam,
   getLightRpc,
   getMintRentExemption,
-} from '@/utils/zkCompression';
+  deriveTokenPoolPda,
+  deriveCpiAuthorityPda,
+  getCompressedMintProgam,
+} from "@/utils/zkCompression";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import {
+  createInitializeMintInstruction,
+  createInitializeMint2Instruction,
+  createInitializeMetadataPointerInstruction,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getMintLen,
+  ExtensionType,
+  MINT_SIZE,
+  createAssociatedTokenAccountInstruction,
+} from "@solana/spl-token";
+import {
+  createInitializeInstruction,
+  createUpdateFieldInstruction,
+  TokenMetadata,
+} from "@solana/spl-token-metadata";
+import { bn } from "@lightprotocol/stateless.js";
 import {
   CompressedTokenProgram,
   selectMinCompressedTokenAccountsForTransfer,
-} from '@lightprotocol/compressed-token';
-import { bn } from '@lightprotocol/stateless.js';
+} from "@lightprotocol/compressed-token";
 import {
-  ExtensionType,
-  MINT_SIZE,
-  TOKEN_2022_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-  createInitializeMetadataPointerInstruction,
-  createInitializeMint2Instruction,
-  createInitializeMintInstruction,
-  getMintLen,
-} from '@solana/spl-token';
-import {
-  type TokenMetadata,
-  createInitializeInstruction,
-  createUpdateFieldInstruction,
-} from '@solana/spl-token-metadata';
-import {
-  Keypair,
-  type PublicKey,
-  SystemProgram,
-  type TransactionInstruction,
-} from '@solana/web3.js';
+  getAssociatedTokenAddress,
+  checkIfAtaExist,
+  checkIfAccountExist,
+} from "@/utils/solana";
 
 export type BaseIxResponse = {
   instructions: TransactionInstruction[];
@@ -79,7 +83,11 @@ export const createZKMintIx = async ({
   const lightRpc = getLightRpc();
 
   if (metadata) {
+    console.log("Handling metadata mint...");
     const mintLen = getMintLen([ExtensionType.MetadataPointer]);
+
+    // get rent exemption
+    console.log("getting rent exemption...");
     const rentExemptBalance = await getMintRentExemption(metadata);
 
     /// Create and initialize SPL Mint account
@@ -90,6 +98,7 @@ export const createZKMintIx = async ({
       programId: TOKEN_2022_PROGRAM_ID,
       space: mintLen,
     });
+    console.log("Deriving token pool pda...");
 
     // Instruction to initialize Mint Account data
     const initializeMintInstruction = createInitializeMintInstruction(
@@ -97,15 +106,21 @@ export const createZKMintIx = async ({
       decimals, // Decimals of Mint
       mintAuthority, // Designated Mint Authority
       freezeAuthority, // Optional Freeze Authority
-      TOKEN_2022_PROGRAM_ID // Token Extension Program ID
+      TOKEN_2022_PROGRAM_ID, // Token Extension Program ID
     );
+
+    /////////////////////////////////
+    // create metadata instructions
+    /////////////////////////////////
+    console.log("creating metadata instructions...");
     // Instruction to invoke System Program to create new account
-    const initializeMetadataPointerInstruction = createInitializeMetadataPointerInstruction(
-      mintAddress, // Mint Account address
-      mintAuthority, // Authority that can set the metadata address
-      mintAuthority, // Account address that holds the metadata
-      TOKEN_2022_PROGRAM_ID
-    );
+    const initializeMetadataPointerInstruction =
+      createInitializeMetadataPointerInstruction(
+        mintAddress, // Mint Account address
+        mintAuthority, // Authority that can set the metadata address
+        mintAuthority, // Account address that holds the metadata
+        TOKEN_2022_PROGRAM_ID,
+      );
     // Instruction to initialize Metadata Account data
     const initializeMetadataInstruction = createInitializeInstruction({
       programId: TOKEN_2022_PROGRAM_ID, // Token Extension Program as Metadata Program
@@ -139,57 +154,62 @@ export const createZKMintIx = async ({
     ];
 
     return { instructions: createMintIxs, mintKp };
-  }
+  } else {
+    console.log("Handling non-metadata mint...");
 
-  const rentExemptBalance = await lightRpc.getMinimumBalanceForRentExemption(MINT_SIZE);
+    const rentExemptBalance =
+      await lightRpc.getMinimumBalanceForRentExemption(MINT_SIZE);
 
-  const createMintAccountInstruction = SystemProgram.createAccount({
-    fromPubkey: creator,
-    lamports: rentExemptBalance,
-    newAccountPubkey: mintAddress,
-    programId: TOKEN_PROGRAM_ID,
-    space: MINT_SIZE,
-  });
+    const createMintAccountInstruction = SystemProgram.createAccount({
+      fromPubkey: creator,
+      lamports: rentExemptBalance,
+      newAccountPubkey: mintAddress,
+      programId: TOKEN_PROGRAM_ID,
+      space: MINT_SIZE,
+    });
 
-  const initializeMintInstruction = createInitializeMint2Instruction(
-    mintAddress,
-    decimals,
-    mintAuthority,
-    freezeAuthority,
-    TOKEN_PROGRAM_ID
-  );
+    const initializeMintInstruction = createInitializeMint2Instruction(
+      mintAddress,
+      decimals,
+      mintAuthority,
+      freezeAuthority,
+      TOKEN_PROGRAM_ID,
+    );
 
-  // create token pool info to enable compressiong
-  const tokenPoolPda = deriveTokenPoolPda(mintAddress);
-  const compressedMintProgram = getCompressedMintProgam(creator);
-  const createTokenPoolIx = await compressedMintProgram.methods
-    .createTokenPool()
-    .accounts({
-      mint: mintAddress,
+    // create token pool info to enable compressiong
+    const tokenPoolPda = deriveTokenPoolPda(mintAddress);
+    const compressedMintProgram = getCompressedMintProgam(creator);
+    // create token pool instructions
+    console.log("Creating token pool instructions...");
+    const createTokenPoolIx = await compressedMintProgram.methods
+      .createTokenPool()
+      .accounts({
+        mint: mintAddress,
+        feePayer: creator,
+        tokenPoolPda,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        cpiAuthorityPda: deriveCpiAuthorityPda(),
+      })
+      .instruction();
+
+    const mintInitialIx = await CompressedTokenProgram.mintTo({
       feePayer: creator,
-      tokenPoolPda,
-      systemProgram: SystemProgram.programId,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      cpiAuthorityPda: deriveCpiAuthorityPda(),
-    })
-    .instruction();
+      mint: mintAddress,
+      authority: mintAuthority,
+      amount: 0,
+      toPubkey: creator,
+    });
 
-  const mintInitialIx = await CompressedTokenProgram.mintTo({
-    feePayer: creator,
-    mint: mintAddress,
-    authority: mintAuthority,
-    amount: 0,
-    toPubkey: creator,
-  });
+    const createMintIxs = [
+      createMintAccountInstruction,
+      initializeMintInstruction,
+      createTokenPoolIx,
+      mintInitialIx,
+    ];
 
-  const createMintIxs = [
-    createMintAccountInstruction,
-    initializeMintInstruction,
-    createTokenPoolIx,
-    mintInitialIx,
-  ];
-
-  return { instructions: createMintIxs, mintKp };
+    return { instructions: createMintIxs, mintKp };
+  }
 };
 
 export const createZKTransferIx = async ({
@@ -201,16 +221,23 @@ export const createZKTransferIx = async ({
   const lightRpc = getLightRpc();
 
   const tokAmount = bn(amount);
-  const compressedTokenAccounts = await lightRpc.getCompressedTokenAccountsByOwner(owner, {
-    mint,
-  });
+
+  console.log("getting compressed token accounts...");
+  const compressedTokenAccounts =
+    await lightRpc.getCompressedTokenAccountsByOwner(owner, {
+      mint,
+    });
   const [inputAccounts] = selectMinCompressedTokenAccountsForTransfer(
     compressedTokenAccounts.items,
-    tokAmount
+    tokAmount,
   );
+
+  console.log("getting validity proof...");
   const proof = await lightRpc.getValidityProof(
-    inputAccounts.map((account) => bn(account.compressedAccount.hash))
+    inputAccounts.map((account) => bn(account.compressedAccount.hash)),
   );
+
+  console.log("transferring compressed tokens...");
   const ix = await CompressedTokenProgram.transfer({
     payer: owner,
     inputCompressedTokenAccounts: inputAccounts,
@@ -244,6 +271,8 @@ export const createCompressTokenIx = async ({
   if (!doesPoolPDAExist) {
     // create token pool info to enable compressiong
     const compressedMintProgram = getCompressedMintProgam(receiver);
+    // create token pool instructions
+    console.log("Creating token pool instructions...");
     const createTokenPoolIx = await compressedMintProgram.methods
       .createTokenPool()
       .accounts({
@@ -259,7 +288,7 @@ export const createCompressTokenIx = async ({
   }
 
   if (!originalAta) {
-    throw new Error('Original ATA not found - create it?');
+    throw new Error("Original ATA not found - create it?");
   }
 
   const compressIx = await CompressedTokenProgram.compress({
@@ -287,24 +316,27 @@ export const createDecompressTokenIx = async ({
   const instructions: TransactionInstruction[] = [];
 
   if (!isAtaValid) {
-    const createAtaIx = createAssociatedTokenAccountInstruction(owner, ata, owner, mint);
+    const createAtaIx = createAssociatedTokenAccountInstruction(
+      owner,
+      ata,
+      owner,
+      mint,
+    );
     instructions.push(createAtaIx);
   }
 
-  const { items: compressedTokenAccounts } = await lightRpc.getCompressedTokenAccountsByOwner(
-    owner,
-    {
+  const { items: compressedTokenAccounts } =
+    await lightRpc.getCompressedTokenAccountsByOwner(owner, {
       mint,
-    }
-  );
+    });
 
   const [inputAccounts] = selectMinCompressedTokenAccountsForTransfer(
     compressedTokenAccounts,
-    bn(amount)
+    bn(amount),
   );
 
   const proof = await lightRpc.getValidityProof(
-    inputAccounts.map((account) => bn(account.compressedAccount.hash))
+    inputAccounts.map((account) => bn(account.compressedAccount.hash)),
   );
 
   // 4. Create the decompress instruction

@@ -1,15 +1,15 @@
 // src/types/global.d.ts
 
 declare namespace NodeJS {
-  interface ProcessEnv {
-    NEXT_PUBLIC_SOLANA_NETWORK: 'mainnet' | 'devnet' | 'local';
-    NEXT_PUBLIC_LOCAL_RPC_URL: string;
-    NEXT_PUBLIC_DEVNET_RPC_URL: string;
-    NEXT_PUBLIC_MAINNET_RPC_URL: string;
-    NODE_ENV: 'development' | 'production' | 'test';
+    interface ProcessEnv {
+      NEXT_PUBLIC_SOLANA_NETWORK: 'mainnet' | 'devnet' | 'local'
+      NEXT_PUBLIC_LOCAL_RPC_URL: string
+      NEXT_PUBLIC_DEVNET_RPC_URL: string
+      NEXT_PUBLIC_MAINNET_RPC_URL: string
+      NODE_ENV: 'development' | 'production' | 'test'
+    }
   }
-}
-
+  
 declare global {
   // Generic API Response type
   type ApiResponse<T = unknown> = {
