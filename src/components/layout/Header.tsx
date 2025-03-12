@@ -26,8 +26,10 @@ export function Header() {
   ];
 
   const toggleDarkMode = () => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark');
+    }
     setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
   };
 
   return (
