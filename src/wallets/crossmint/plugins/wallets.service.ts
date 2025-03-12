@@ -9,10 +9,7 @@ import {
 
 export class WalletsService {
     constructor(private client: CrossmintApiClient) {}
-
-    @Tool({
-        description: "Create a new wallet for a Twitter / X user",
-    })
+    
     async createWalletForTwitterUser(parameters: CreateWalletForTwitterUserParameters) {
         try {
             const response = await fetch(`${this.client.baseUrl}/api/v1-alpha2/wallets`, {
