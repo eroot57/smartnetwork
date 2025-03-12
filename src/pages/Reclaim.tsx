@@ -6,6 +6,7 @@ import { TokenAccount } from "@/utils/solana";
 import { useSplTokenAccounts } from "@/hooks/useSplTokenAccounts";
 import { RotateCcw } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { TokenContextProvider } from "@/context/tokensContexts";
 
 const Reclaim = () => {
   const { publicKey: connectedWallet } = useWallet();
@@ -108,4 +109,10 @@ const Reclaim = () => {
   );
 };
 
-export default Reclaim;
+const App = () => (
+  <TokenContextProvider>
+    <Reclaim />
+  </TokenContextProvider>
+);
+
+export default App;
