@@ -74,24 +74,28 @@ const CompressedTokens = () => {
   }
 
   return (
-    <Router>
-      <div>
-        <div className="flex justify-between items-center pb-5">
-          <h1 className="text-4xl font-semibold text-gray-700">
-            Compressed Wallet
-          </h1>
-          <button
-            disabled={isFetchingCompressedTokens}
-            onClick={refetchCompressedTokens}
-            className="bg-gray-100 p-2 rounded-md hover:bg-white transition-colors"
-          >
-            <RotateCcw strokeWidth={1.25} size={20} />
-          </button>
-        </div>
-        {/* Rest of your component */}
+    <div>
+      <div className="flex justify-between items-center pb-5">
+        <h1 className="text-4xl font-semibold text-gray-700">
+          Compressed Wallet
+        </h1>
+        <button
+          disabled={isFetchingCompressedTokens}
+          onClick={refetchCompressedTokens}
+          className="bg-gray-100 p-2 rounded-md hover:bg-white transition-colors"
+        >
+          <RotateCcw strokeWidth={1.25} size={20} />
+        </button>
       </div>
-    </Router>
+      {/* Rest of your component */}
+    </div>
   );
 };
 
-export default CompressedTokens;
+const App = () => (
+  <Router>
+    <CompressedTokens />
+  </Router>
+);
+
+export default App;
