@@ -40,9 +40,6 @@ export class CrossmintMintService {
         };
     }
 
-    @Tool({
-        description: "Get all collections created by the user",
-    })
     async getAllCollections(walletClient: EVMWalletClient, parameters: GetAllCollectionsParameters) {
         const response = await fetch(`${this.client.baseUrl}/api/2022-06-09/collections/`, {
             headers: {
@@ -54,10 +51,6 @@ export class CrossmintMintService {
         return await response.json();
     }
 
-    @Tool({
-        description:
-            "Mint an NFT to a recipient from a collection and return the transaction hash. Requires a collection ID of an already deployed collection.",
-    })
     async mintNFT(walletClient: EVMWalletClient, parameters: MintNFTParameters) {
         let recipient: string;
 
