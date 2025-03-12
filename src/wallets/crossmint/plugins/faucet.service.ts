@@ -8,7 +8,7 @@ export class TopUpBalanceParameters extends createToolParameters(
     z.object({
         wallet: z.string().optional().describe("The address to top up the balance of"),
         amount: z.number().min(1).max(100).describe("The amount of tokens to top up"),
-    }),
+    })
 ) {}
 
 export class CrossmintFaucetService {
@@ -17,7 +17,7 @@ export class CrossmintFaucetService {
     @Tool({
         description: "Top up your USDC balance",
     })
-    async topUpUsdc(walletClient: EVMWalletClient, parameters: TopUpBalanceParameters) {
+    async topUpUsdc(walletClient: EVMWalletClient, parameters: TopUpBalanceParameters, context?: any) {
         const wallet = parameters.wallet ?? walletClient.getAddress();
         const resolvedWalletAddress = await walletClient.resolveAddress(wallet);
 
