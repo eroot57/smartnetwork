@@ -9,7 +9,7 @@ import { DecompressTokenModal } from "@/components/modals/DecompressTokenModal";
 import { SendHorizontal, Coins, RefreshCcw } from "lucide-react";
 import { useCompressedTokenBalance } from "@/hooks/useCompressedTokenBalance";
 import { RotateCcw } from "lucide-react";
-import { CompressedTokenInfo } from "@/context/tokensContexts";
+import { CompressedTokenInfo, TokenContextProvider } from "@/context/tokensContexts";
 
 const CompressedTokens = () => {
   const navigate = useNavigate();
@@ -92,9 +92,11 @@ const CompressedTokens = () => {
 };
 
 const App = () => (
-  <Router>
-    <CompressedTokens />
-  </Router>
+  <TokenContextProvider>
+    <Router>
+      <CompressedTokens />
+    </Router>
+  </TokenContextProvider>
 );
 
 export default App;
