@@ -7,9 +7,6 @@ import { GetAllCollectionsParameters, MintNFTParameters } from "./mint.parameter
 export class CrossmintMintService {
     constructor(private readonly client: CrossmintApiClient) {}
 
-    @Tool({
-        description: "Create a new collection and return the id of the collection",
-    })
     async createCollection(walletClient: EVMWalletClient, parameters: MintNFTParameters) {
         // TODO: add chain as a parameter
         const response = await fetch(`${this.client.baseUrl}/api/2022-06-09/collections/`, {
