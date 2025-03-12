@@ -40,9 +40,8 @@ const CompressedTokens = () => {
       } else {
         setFilteredTokens(allCompressedTokens);
       }
-    }, 10); // Adjust the delay as needed (500ms in this example)
+    }, 10);
 
-    // Cleanup function to clear the timeout if search term changes
     return () => {
       clearTimeout(handler);
     };
