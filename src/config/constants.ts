@@ -1,3 +1,7 @@
+import { config } from 'dotenv';
+
+config();
+
 // src/config/constants.ts
 export const WALLET_CONSTANTS = {
     // Network configurations
