@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 module.exports = {
   env: {
     NEXT_PUBLIC_SOLANA_NETWORK: process.env.NEXT_PUBLIC_SOLANA_NETWORK,
