@@ -38,7 +38,8 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "@aptos-labs/ts-sdk": "^1.33.1",
-    "aptos": "^1.21.0"
+    "aptos": "^1.21.0",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
