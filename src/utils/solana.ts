@@ -37,13 +37,13 @@ export const formatAmount = (
 };
 
 export const getAddressExplorerUrl = (address = "") => {
-  return currentEnv === "mainnet"
+  return currentEnv === "mainnet-beta"
     ? `https://explorer.solana.com/address/${address}`
     : `https://explorer.solana.com/address/${address}?cluster=devnet`;
 };
 
 export const getSignatureExplorerUrl = (signature = "") => {
-  return currentEnv === "mainnet"
+  return currentEnv === "mainnet-beta"
     ? `https://explorer.solana.com/tx/${signature}`
     : `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
 };
