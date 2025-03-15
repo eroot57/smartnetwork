@@ -3,7 +3,7 @@
 export enum Environment {
   LOCAL = 'local',
   DEVNET = 'devnet',
-  MAINNET = 'mainnet',
+  MAINNET = 'mainnet-beta',
 }
 
 export function getEnvironment(): Environment {
@@ -11,7 +11,7 @@ export function getEnvironment(): Environment {
   switch (env) {
     case 'local':
       return Environment.LOCAL;
-    case 'mainnet':
+    case 'mainnet-beta':
       return Environment.MAINNET;
     default:
       return Environment.DEVNET;
