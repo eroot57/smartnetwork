@@ -1,7 +1,6 @@
 module.exports = {
   reactStrictMode: true,
   env: {
-    NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_SOLANA_NETWORK: process.env.NEXT_PUBLIC_SOLANA_NETWORK,
     NEXT_PUBLIC_SOLANA_RPC_HOST: process.env.NEXT_PUBLIC_SOLANA_RPC_HOST,
     NEXT_PUBLIC_CROSSMINT_API_URL: process.env.NEXT_PUBLIC_CROSSMINT_API_URL,
