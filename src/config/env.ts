@@ -26,10 +26,12 @@ const envSchema = z.object({
 
 // Load and validate environment variables
 export const env = envSchema.safeParse(process.env);
-/*
+
 if (!env.success) {
+  console.error(env.error);
+  console.error(env);
   console.error('Invalid environment variables:', env.error.format());
   throw new Error('Invalid environment variables');
 }
-*/
+
 export const config = env.data;
