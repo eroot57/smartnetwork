@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Environment variable schema definition
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
-  NEXT_PUBLIC_SOLANA_NETWORK: z.enum(['mainnet-beta', 'testnet', 'devnet']).default('devnet'),
+  NEXT_PUBLIC_SOLANA_NETWORK: z.enum(['mainnet-beta', 'testnet', 'devnet']).default('mainnet-beta'),
   NEXT_PUBLIC_SOLANA_RPC_HOST: z.string().url().default('https://ellette-cyy4xd-fast-mainnet.helius-rpc.com'),
   NEXT_PUBLIC_CROSSMINT_API_URL: z.string().url().default('https://staging.crossmint.com/api/v1-alpha2'),
   NEXT_PUBLIC_JUPITER_API_URL: z.string().url().default('https://price.jup.ag/v4'),
