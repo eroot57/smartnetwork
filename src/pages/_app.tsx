@@ -1,27 +1,40 @@
-import { AppProps } from 'next/app';
-import WalletProvider from '@/context/WalletProvider';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { AppProps } from "next/app";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
+import { useMemo } from "react";
+import { clusterApiUrl } from "@solana/web3.js";
+
+require("@solana/wallet-adapter-react-ui/styles.css");
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
-  const router = useRouter();
+  const network = WalletAdapterNetwork.Devnet;
 
-  useEffect(() => {
-    // Custom logic to handle route changes if needed
-    const handleRouteChange = (url: string) => {
-      console.log(`App is changing to: ${url}`);
-    };
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
 
-    router.events.on('routeChangeStart', handleRouteChange);
-    return () => {
-      router.events.off('routeChangeStart', handleRouteChange);
-    };
-  }, [router.events]);
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter({ network }),
+    ],
+    [network]
+  );
 
   return (
-    <WalletProvider>
-      <Component {...pageProps} />
-    </WalletProvider>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <Component {...pageProps} />
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 };
 
